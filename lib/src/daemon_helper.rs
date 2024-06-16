@@ -17,7 +17,7 @@ use bitcoincore_zmq::{
 };
 use futures_util::FutureExt;
 use futures_util::StreamExt;
-use log::{error, info, warn};
+use log::{error, info, trace, warn};
 use rand::prelude::SliceRandom;
 use rand::Rng;
 use reqwest::Client;
@@ -1651,11 +1651,13 @@ impl DaemonHelper {
 
             // every 100 inputs we check the fee and send the tx, or if we are at the last unspent item
             if inputs.len() % 100 == 0 || is_last {
+                let precise_amount = self.precise(output_amt);
+
                 let outputs: String = format!(
                     r#"
                         [{{
                             "address": "{addr}",
-                            "amount": {output_amt},
+                            "amount": {precise_amount},
                             "subfee": true
                         }}]"#
                 );
@@ -1788,11 +1790,13 @@ impl DaemonHelper {
 
             // every 100 inputs we check the fee and send the tx, or if we are at the last unspent item
             if inputs.len() % 100 == 0 || is_last {
+                let precise_amount = self.precise(output_amt);
+
                 let outputs: String = format!(
                     r#"
                         [{{
                             "address": "script",
-                            "amount": {output_amt},
+                            "amount": {precise_amount},
                             "script": "{cs_script}",
                             "subfee": true
                         }}]"#
@@ -1991,6 +1995,13 @@ impl DaemonHelper {
         // Converts a float to an integer
         let sat_readable: u64 = (value * 10_f64.powi(8)).round() as u64;
         sat_readable
+    }
+
+    pub fn precise(&self, input: f64) -> f64 {
+        let zeros = 100000000.0;
+        let precise = ((input * zeros).round()) / zeros;
+        trace!("Precision set from {} to {}.", input, precise);
+        return precise;
     }
 }
 
