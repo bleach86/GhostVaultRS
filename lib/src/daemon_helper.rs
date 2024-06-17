@@ -2,8 +2,8 @@
 use crate::{
     config::GVConfig,
     constants::{
-        AGVR_ACTIVATION_HEIGHT, DAEMON_PID_FILE, DEFAULT_COLD_WALLET, DEV_FUND_ADDRESS,
-        MAX_TX_FEES, TMP_PATH,
+        AGVR_ACTIVATION_HEIGHT, DAEMON_PID_FILE, DAEMON_SETTINGS_FILE, DEFAULT_COLD_WALLET,
+        DEV_FUND_ADDRESS, MAX_TX_FEES, TMP_PATH,
     },
     file_ops,
     gv_client_methods::CLICaller,
@@ -909,6 +909,8 @@ impl DaemonHelper {
         let conf = self.config.read().await;
 
         let daemon_path: PathBuf = conf.daemon_path.clone();
+        let daemon_data_dir: PathBuf = conf.daemon_data_dir.clone();
+        let daemon_conf_path: PathBuf = daemon_data_dir.join(DAEMON_SETTINGS_FILE);
 
         let daemon_path_str: &str = daemon_path.to_str().ok_or("Invalid daemon path")?;
         drop(conf);
@@ -920,6 +922,8 @@ impl DaemonHelper {
 
         if cli_path.exists() {
             let command = Command::new(&cli_path)
+                .arg(format!("-datadir={}", daemon_data_dir.to_str().unwrap()))
+                .arg(format!("-conf={}", daemon_conf_path.to_str().unwrap()))
                 .arg("stop")
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
@@ -1916,6 +1920,10 @@ impl DaemonHelper {
         let conf = self.config.read().await;
         let daemon_path = conf.daemon_path.clone();
         let daemon_hash_opt = conf.daemon_hash.clone();
+
+        let daemon_data_dir = conf.daemon_data_dir.clone();
+        let daemon_conf_path = daemon_data_dir.join(DAEMON_SETTINGS_FILE);
+
         drop(conf);
 
         if !daemon_path.exists() {
@@ -1937,6 +1945,8 @@ impl DaemonHelper {
         }
 
         let _command: std::process::Child = Command::new(&daemon_path)
+            .arg(format!("-datadir={}", daemon_data_dir.to_str().unwrap()))
+            .arg(format!("-conf={}", daemon_conf_path.to_str().unwrap()))
             .arg("-daemon")
             .stdout(Stdio::null())
             .stderr(Stdio::null())
