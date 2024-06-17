@@ -2,6 +2,7 @@ use crate::file_ops;
 use home::home_dir;
 use log::info;
 
+use serde_json::Value;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
@@ -23,37 +24,71 @@ fn create_settings(path: &PathBuf) -> std::io::Result<()> {
 
     let env_contents: String = if legacy_config_path.exists() {
         info!("Legacy GhostVault install detected, importing settings...");
-        let legacy_conf: serde_json::Value = file_ops::read_json(&legacy_config_path)?;
+        let legacy_conf: Value = file_ops::read_json(&legacy_config_path)?;
         let wallet: String = format!(
             "RPC_WALLET = \"{}\"",
-            &legacy_conf["walletName"].as_str().unwrap()
+            &legacy_conf
+                .get("walletName")
+                .unwrap_or(&Value::String("".to_string()))
+                .as_str()
+                .unwrap()
+                .to_string()
         );
         let ext_pk: String = format!(
             "EXT_PUB_KEY = \"{}\"",
-            &legacy_conf["extPubKey"].as_str().unwrap()
+            &legacy_conf
+                .get("extPubKey")
+                .unwrap_or(&Value::String("".to_string()))
+                .as_str()
+                .unwrap()
+                .to_string()
         );
         let ext_pk_label: String = format!(
             "EXT_PUB_KEY_LABEL = \"{}\"",
-            &legacy_conf["extPubKeyLabel"].as_str().unwrap()
+            &legacy_conf
+                .get("extPubKeyLabel")
+                .unwrap_or(&Value::String("".to_string()))
+                .as_str()
+                .unwrap()
+                .to_string()
         );
         let reward_addr: String = format!(
             "REWARD_ADDRESS = \"{}\"",
-            &legacy_conf["rewardAddress"].as_str().unwrap()
+            &legacy_conf
+                .get("rewardAddress")
+                .unwrap_or(&Value::String("".to_string()))
+                .as_str()
+                .unwrap()
+                .to_string()
         );
-        let anon_mode: String = format!("ANON_MODE = {}", &legacy_conf["anonMode"].to_string());
+        let anon_mode: String = format!(
+            "ANON_MODE = {}",
+            &legacy_conf
+                .get("anonMode")
+                .unwrap_or(&Value::Bool(false))
+                .as_bool()
+                .unwrap()
+                .to_string()
+        );
         let anon_mode_reward: String = format!(
             "ANON_REWARD_ADDRESS = \"{}\"",
-            &legacy_conf["anonRewardAddress"].as_str().unwrap()
+            &legacy_conf
+                .get("anonRewardAddress")
+                .unwrap_or(&Value::String("".to_string()))
+                .as_str()
+                .unwrap()
+                .to_string()
         );
 
-        let internal_anon = if legacy_conf.get("internalAnon").is_some() {
-            format!(
-                "INTERNAL_ANON = \"{}\"",
-                &legacy_conf["internalAnon"].as_str().unwrap()
-            )
-        } else {
-            "INTERNAL_ANON = \"\"".to_string()
-        };
+        let internal_anon = format!(
+            "INTERNAL_ANON = \"{}\"",
+            &legacy_conf
+                .get("internalAnon")
+                .unwrap_or(&Value::String("".to_string()))
+                .as_str()
+                .unwrap()
+                .to_string()
+        );
         info!("Disabling legacy cron");
         disable_legacy_cron()?;
 
