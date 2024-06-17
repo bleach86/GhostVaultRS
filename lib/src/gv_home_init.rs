@@ -29,36 +29,36 @@ fn create_settings(path: &PathBuf) -> std::io::Result<()> {
             "RPC_WALLET = \"{}\"",
             &legacy_conf
                 .get("walletName")
-                .unwrap_or(&Value::String("".to_string()))
+                .unwrap_or(&Value::String(String::new()))
                 .as_str()
-                .unwrap()
+                .unwrap_or("")
                 .to_string()
         );
         let ext_pk: String = format!(
             "EXT_PUB_KEY = \"{}\"",
             &legacy_conf
                 .get("extPubKey")
-                .unwrap_or(&Value::String("".to_string()))
+                .unwrap_or(&Value::String(String::new()))
                 .as_str()
-                .unwrap()
+                .unwrap_or("")
                 .to_string()
         );
         let ext_pk_label: String = format!(
             "EXT_PUB_KEY_LABEL = \"{}\"",
             &legacy_conf
                 .get("extPubKeyLabel")
-                .unwrap_or(&Value::String("".to_string()))
+                .unwrap_or(&Value::String(String::new()))
                 .as_str()
-                .unwrap()
+                .unwrap_or("")
                 .to_string()
         );
         let reward_addr: String = format!(
             "REWARD_ADDRESS = \"{}\"",
             &legacy_conf
                 .get("rewardAddress")
-                .unwrap_or(&Value::String("".to_string()))
+                .unwrap_or(&Value::String(String::new()))
                 .as_str()
-                .unwrap()
+                .unwrap_or("")
                 .to_string()
         );
         let anon_mode: String = format!(
@@ -67,16 +67,16 @@ fn create_settings(path: &PathBuf) -> std::io::Result<()> {
                 .get("anonMode")
                 .unwrap_or(&Value::Bool(false))
                 .as_bool()
-                .unwrap()
+                .unwrap_or(false)
                 .to_string()
         );
         let anon_mode_reward: String = format!(
             "ANON_REWARD_ADDRESS = \"{}\"",
             &legacy_conf
                 .get("anonRewardAddress")
-                .unwrap_or(&Value::String("".to_string()))
+                .unwrap_or(&Value::String(String::new()))
                 .as_str()
-                .unwrap()
+                .unwrap_or("")
                 .to_string()
         );
 
@@ -84,9 +84,9 @@ fn create_settings(path: &PathBuf) -> std::io::Result<()> {
             "INTERNAL_ANON = \"{}\"",
             &legacy_conf
                 .get("internalAnon")
-                .unwrap_or(&Value::String("".to_string()))
+                .unwrap_or(&Value::String(String::new()))
                 .as_str()
-                .unwrap()
+                .unwrap_or("")
                 .to_string()
         );
         info!("Disabling legacy cron");

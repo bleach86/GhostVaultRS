@@ -106,12 +106,12 @@ impl GVConfig {
 
         let bot_token: Option<String> = gv_conf
             .get("TELOXIDE_TOKEN")
-            .unwrap_or(&toml_Value::String("".to_string()))
+            .unwrap_or(&toml_Value::String(String::new()))
             .clone()
             .empty_as_none();
         let tg_user: Option<String> = gv_conf
             .get("TELEGRAM_USER")
-            .unwrap_or(&toml_Value::String("".to_string()))
+            .unwrap_or(&toml_Value::String(String::new()))
             .clone()
             .empty_as_none();
 
@@ -119,78 +119,78 @@ impl GVConfig {
             .get("rpcbind")
             .unwrap_or(&serde_json::Value::String("127.0.0.1".to_string()))
             .as_str()
-            .unwrap()
+            .unwrap_or("127.0.0.1")
             .to_string();
 
         let rpc_port: u16 = daemon_conf
             .get("rpcport")
             .unwrap_or(&serde_json::Value::Number(51725.into()))
             .as_u64()
-            .unwrap() as u16;
+            .unwrap_or(51725) as u16;
         let rpc_wallet: String = gv_conf
             .get("RPC_WALLET")
-            .unwrap_or(&toml_Value::String("".to_string()))
+            .unwrap_or(&toml_Value::String(String::new()))
             .as_str()
-            .unwrap()
+            .unwrap_or("")
             .to_string();
 
         let rpc_user: String = daemon_conf
             .get("rpcuser")
             .unwrap_or(&serde_json::Value::String("user".to_string()))
             .as_str()
-            .unwrap()
+            .unwrap_or("user")
             .to_string();
         let rpc_pass: String = daemon_conf
             .get("rpcpassword")
             .unwrap_or(&serde_json::Value::String("password".to_string()))
             .as_str()
-            .unwrap()
+            .unwrap_or("password")
             .to_string();
         let cli_address: String = gv_conf
             .get("CLI_ADDRESS")
             .unwrap_or(&toml_Value::String("127.0.0.1:50051".to_string()))
             .as_str()
-            .unwrap()
+            .unwrap_or("127.0.0.1:50051")
             .to_string();
 
         let config_file: PathBuf = toml_file_path;
 
         let ext_pub_key: Option<String> = gv_conf
             .get("EXT_PUB_KEY")
-            .unwrap_or(&toml_Value::String("".to_string()))
+            .unwrap_or(&toml_Value::String(String::new()))
             .clone()
             .empty_as_none();
         let ext_pub_key_label: Option<String> = gv_conf
             .get("EXT_PUB_KEY_LABEL")
-            .unwrap_or(&toml_Value::String("".to_string()))
+            .unwrap_or(&toml_Value::String(String::new()))
             .clone()
             .empty_as_none();
         let reward_address: Option<String> = gv_conf
             .get("REWARD_ADDRESS")
-            .unwrap_or(&toml_Value::String("".to_string()))
+            .unwrap_or(&toml_Value::String(String::new()))
             .clone()
             .empty_as_none();
         let anon_mode: bool = gv_conf
             .get("ANON_MODE")
             .unwrap_or(&toml_Value::Boolean(false))
             .as_bool()
-            .unwrap();
+            .unwrap_or(false);
         let anon_reward_address: Option<String> = gv_conf
             .get("ANON_REWARD_ADDRESS")
-            .unwrap_or(&toml_Value::String("".to_string()))
+            .unwrap_or(&toml_Value::String(String::new()))
             .clone()
             .empty_as_none();
 
         let internal_anon: Option<String> = gv_conf
             .get("INTERNAL_ANON")
-            .unwrap_or(&toml_Value::String("".to_string()))
+            .unwrap_or(&toml_Value::String(String::new()))
             .clone()
             .empty_as_none();
 
         let daemon_path: PathBuf = PathBuf::from(gv_conf["DAEMON_PATH"].as_str().unwrap_or(""));
         let daemon_hash: Option<String> = gv_conf
             .get("DAEMON_HASH")
-            .unwrap_or(&toml_Value::String("".to_string()))
+            .unwrap_or(&toml_Value::String(String::new()))
             .clone()
             .empty_as_none();
 
@@ -203,7 +203,7 @@ impl GVConfig {
             .get("MIN_REWARD_PAYOUT")
             .unwrap_or(&toml_Value::Integer(10000000))
             .as_integer()
-            .unwrap() as u64;
+            .unwrap_or(10000000) as u64;
 
         let zmq_block_host: String = daemon_conf
             .get("zmqpubhashblock")
@@ -211,7 +211,7 @@ impl GVConfig {
                 "tcp://127.0.0.1:28332".to_string(),
             ))
             .as_str()
-            .unwrap()
+            .unwrap_or("tcp://127.0.0.1:28332")
             .to_string();
 
         let zmq_tx_host: String = daemon_conf
@@ -220,39 +220,39 @@ impl GVConfig {
                 "tcp://127.0.0.1:28332".to_string(),
             ))
             .as_str()
-            .unwrap()
+            .unwrap_or("tcp://127.0.0.1:28332")
             .to_string();
 
         let reward_interval: u64 = gv_conf
             .get("REWARD_INTERVAL")
             .unwrap_or(&toml_Value::Integer(DEFAULT_PROCESS_REWARDS))
             .as_integer()
-            .unwrap() as u64;
+            .unwrap_or(DEFAULT_PROCESS_REWARDS) as u64;
 
         let announce_stakes: bool = gv_conf
             .get("ANNOUNCE_STAKES")
             .unwrap_or(&toml_Value::Boolean(true))
             .as_bool()
-            .unwrap();
+            .unwrap_or(true);
         let announce_zaps: bool = gv_conf
             .get("ANNOUNCE_ZAPS")
             .unwrap_or(&toml_Value::Boolean(true))
             .as_bool()
-            .unwrap();
+            .unwrap_or(true);
         let announce_rewards: bool = gv_conf
             .get("ANNOUNCE_REWARDS")
             .unwrap_or(&toml_Value::Boolean(true))
             .as_bool()
-            .unwrap();
+            .unwrap_or(true);
         let timezone = gv_conf
             .get("TIMEZONE")
             .unwrap_or(&toml_Value::String("UTC".to_string()))
             .as_str()
-            .unwrap()
+            .unwrap_or("UTC")
             .to_string();
         let mnemonic: Option<String> = gv_conf
             .get("MNEMONIC")
-            .unwrap_or(&toml_Value::String("".to_string()))
+            .unwrap_or(&toml_Value::String(String::new()))
             .clone()
             .empty_as_none();
 
