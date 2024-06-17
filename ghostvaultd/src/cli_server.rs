@@ -1161,8 +1161,6 @@ impl GvCLIServer {
     async fn do_flush_rewards_to_anon(&self) {
         let daemon_ready: bool = self.daemon_ready().await;
 
-        println!("this fucking place");
-
         if daemon_ready {
             let balances = self.daemon.get_balances().await.unwrap();
             let balance_value = balances.get("mine").unwrap().as_object().unwrap();
