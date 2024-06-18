@@ -240,6 +240,10 @@ async fn main() {
             if let Ok(enable_bot) = enable_bot_res {
                 if is_json {
                     println!("{}", enable_bot.as_str().unwrap());
+                } else {
+                    println!(
+                        "Telegram bot enabled. Restart GhostVault for changes to take effect."
+                    );
                 }
             } else if let Err(err) = enable_bot_res {
                 handle_command_error(err);
@@ -251,6 +255,10 @@ async fn main() {
             if let Ok(disable_bot) = disable_bot_res {
                 if is_json {
                     println!("{}", disable_bot.as_str().unwrap());
+                } else {
+                    println!(
+                        "Telegram bot disabled. Restart GhostVault for changes to take effect."
+                    );
                 }
             } else if let Err(err) = disable_bot_res {
                 handle_command_error(err);
