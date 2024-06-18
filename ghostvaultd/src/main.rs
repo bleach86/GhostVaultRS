@@ -69,27 +69,27 @@ fn main() {
         false
     };
 
-    let log_file_path = gv_data_dir.join("logs/ghostvault.log");
+    let log_file_path: PathBuf = gv_data_dir.join("logs/ghostvault.log");
 
-    let roller = FixedWindowRoller::builder()
+    let roller: FixedWindowRoller = FixedWindowRoller::builder()
         .build(&log_file_path.with_extension("{}.gz").to_str().unwrap(), 3)
         .expect("Failed to build roller");
 
-    let policy = CompoundPolicy::new(
+    let policy: CompoundPolicy = CompoundPolicy::new(
         Box::new(SizeTrigger::new(1024 * 1024 * 10)), // 10 MB
         Box::new(roller),
     );
 
-    let file_appender = RollingFileAppender::builder()
+    let file_appender: RollingFileAppender = RollingFileAppender::builder()
         .encoder(Box::new(PatternEncoder::default()))
         .build(log_file_path, Box::new(policy))
         .expect("Failed to create file appender");
 
-    let console_appender = ConsoleAppender::builder()
+    let console_appender: ConsoleAppender = ConsoleAppender::builder()
         .encoder(Box::new(PatternEncoder::default()))
         .build();
 
-    let log_config = Config::builder()
+    let log_config: Config = Config::builder()
         .appender(Appender::builder().build("file", Box::new(file_appender)))
         .appender(Appender::builder().build("console", Box::new(console_appender)))
         .build(
@@ -110,11 +110,19 @@ fn main() {
 
     let pid_from_file: u32 = file_ops::get_pid(&gv_data_dir, GV_PID_FILE);
     if file_ops::pid_exists(pid_from_file) {
-        info!(
+        let running_msg: String = format!(
             "Detected running GhostVault instance at PID: {}",
             pid_from_file
         );
+
+        info!("{}", running_msg);
         info!("Exiting!");
+
+        if do_daemon {
+            println!("{}", running_msg);
+            println!("Exiting!");
+        }
+
         exit(0);
     }
     file_ops::make_pid_file(&gv_data_dir, GV_PID_FILE).unwrap();

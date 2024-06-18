@@ -1341,6 +1341,14 @@ impl DaemonHelper {
         let mut in_amount: u64 = 0;
         let mut stake_kernel: String = "".to_string();
 
+        let vout_array = tx_details
+            .get("decoded")
+            .ok_or("No decoded value")?
+            .get("vout")
+            .ok_or("Vout not found")?
+            .as_array()
+            .ok_or("Vout not an array")?;
+
         for vin in tx_vin.iter() {
             let prev_txid: &str = vin.get("txid").unwrap().as_str().unwrap();
             let prev_vout: u64 = vin.get("vout").unwrap().as_u64().unwrap();
@@ -1348,52 +1356,36 @@ impl DaemonHelper {
             let prev_tx: Result<Value, Box<dyn Error + Send + Sync>> =
                 self.get_transaction(prev_txid).await;
 
-            let prev_is_wallet: bool = if prev_tx.is_ok() { true } else { false };
-
-            in_amount += if prev_is_wallet {
-                prev_tx
-                    .as_ref()
-                    .unwrap()
+            if prev_tx.is_ok() {
+                let prev_tx = prev_tx.unwrap();
+                let prev_vout_array = prev_tx
                     .get("decoded")
-                    .unwrap()
+                    .ok_or("No decoded value")?
                     .get("vout")
-                    .unwrap()
+                    .ok_or("Vout not found")?
                     .as_array()
-                    .unwrap()[prev_vout as usize]
+                    .ok_or("Vout not an array")?;
+
+                in_amount += prev_vout_array[prev_vout as usize]
                     .get("valueSat")
                     .unwrap()
                     .as_u64()
-                    .unwrap()
-            } else {
-                0
-            };
+                    .unwrap();
 
-            if prev_is_wallet && stake_kernel.is_empty() {
-                stake_kernel = prev_tx
-                    .unwrap()
-                    .get("decoded")
-                    .unwrap()
-                    .get("vout")
-                    .unwrap()
-                    .as_array()
-                    .unwrap()[prev_vout as usize]
-                    .get("scriptPubKey")
-                    .unwrap()
-                    .get("addresses")
-                    .unwrap()
-                    .as_array()
-                    .unwrap()[0]
-                    .as_str()
-                    .unwrap()
-                    .to_string()
-            } else if prev_is_wallet && stake_kernel.is_empty() {
-                stake_kernel = tx_details
-                    .get("decoded")
-                    .unwrap()
-                    .get("vout")
-                    .unwrap()
-                    .as_array()
-                    .unwrap()[1]
+                if stake_kernel.is_empty() {
+                    stake_kernel = prev_vout_array[prev_vout as usize]
+                        .get("scriptPubKey")
+                        .unwrap()
+                        .get("addresses")
+                        .unwrap()
+                        .as_array()
+                        .unwrap()[0]
+                        .as_str()
+                        .unwrap()
+                        .to_string();
+                }
+            } else {
+                stake_kernel = vout_array[1]
                     .get("scriptPubKey")
                     .unwrap()
                     .get("addresses")
@@ -1409,27 +1401,13 @@ impl DaemonHelper {
         let is_agvr: bool = if height < AGVR_ACTIVATION_HEIGHT {
             false
         } else {
-            tx_details
-                .get("decoded")
-                .unwrap()
-                .get("vout")
-                .unwrap()
-                .as_array()
-                .unwrap()[0]
-                .get("gvr_fund_cfwd")
-                .is_none()
+            vout_array[0].get("gvr_fund_cfwd").is_none()
         };
 
         let agvr_reward: u64 = if !is_agvr {
             0
         } else {
-            let vout_addr = tx_details
-                .get("decoded")
-                .unwrap()
-                .get("vout")
-                .unwrap()
-                .as_array()
-                .unwrap()[1]
+            let vout_addr = vout_array[1]
                 .get("scriptPubKey")
                 .unwrap()
                 .get("addresses")
@@ -1441,13 +1419,7 @@ impl DaemonHelper {
 
             let agvr_vout = if vout_addr == stake_kernel { 1 } else { 2 };
 
-            tx_details
-                .get("decoded")
-                .unwrap()
-                .get("vout")
-                .unwrap()
-                .as_array()
-                .unwrap()[agvr_vout]
+            vout_array[agvr_vout]
                 .get("valueSat")
                 .unwrap()
                 .as_u64()
@@ -1456,14 +1428,6 @@ impl DaemonHelper {
 
         let mut vout_total: u64 = 0;
         let mut is_coldstake: bool = false;
-
-        let vout_array = tx_details
-            .get("decoded")
-            .unwrap()
-            .get("vout")
-            .unwrap()
-            .as_array()
-            .unwrap();
 
         for vout in vout_array {
             let blacklist_type: Vec<&str> = vec!["data", "anon", "blind"];
