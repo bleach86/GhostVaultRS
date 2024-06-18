@@ -1332,11 +1332,11 @@ impl DaemonHelper {
 
         let tx_vin = &tx_details
             .get("decoded")
-            .unwrap()
+            .ok_or("No decoded value")?
             .get("vin")
-            .unwrap()
+            .ok_or("Vin not found")?
             .as_array()
-            .unwrap();
+            .ok_or("Vin not an array")?;
 
         let mut in_amount: u64 = 0;
         let mut stake_kernel: String = "".to_string();
@@ -1432,7 +1432,13 @@ impl DaemonHelper {
         for vout in vout_array {
             let blacklist_type: Vec<&str> = vec!["data", "anon", "blind"];
 
-            let vout_type: &str = vout.get("type").unwrap().as_str().unwrap();
+            let default_vout_type = Value::String(String::new());
+
+            let vout_type: &str = vout
+                .get("type")
+                .unwrap_or(&default_vout_type)
+                .as_str()
+                .unwrap();
             if blacklist_type.contains(&vout_type) {
                 continue;
             }
