@@ -1958,21 +1958,21 @@ impl DaemonHelper {
         let script_pub_key = match vout.get("scriptPubKey") {
             Some(value) => value,
             None => {
-                return "".to_string();
+                return String::new();
             }
         };
 
         let addresses = match script_pub_key.get("addresses") {
             Some(value) => value,
             None => {
-                return "".to_string();
+                return String::new();
             }
         };
 
         let addresses_array = match addresses.as_array() {
             Some(value) => value,
             None => {
-                return "".to_string();
+                return String::new();
             }
         };
 
@@ -1981,7 +1981,7 @@ impl DaemonHelper {
                 return addr_str.to_string();
             }
         }
-        "".to_string()
+        String::new()
     }
 }
 
