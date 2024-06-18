@@ -1373,28 +1373,10 @@ impl DaemonHelper {
                     .unwrap();
 
                 if stake_kernel.is_empty() {
-                    stake_kernel = prev_vout_array[prev_vout as usize]
-                        .get("scriptPubKey")
-                        .unwrap()
-                        .get("addresses")
-                        .unwrap()
-                        .as_array()
-                        .unwrap()[0]
-                        .as_str()
-                        .unwrap()
-                        .to_string();
+                    stake_kernel = self.get_addr_from_vout(&prev_vout_array[prev_vout as usize]);
                 }
             } else {
-                stake_kernel = vout_array[1]
-                    .get("scriptPubKey")
-                    .unwrap()
-                    .get("addresses")
-                    .unwrap()
-                    .as_array()
-                    .unwrap()[0]
-                    .as_str()
-                    .unwrap()
-                    .to_string()
+                stake_kernel = self.get_addr_from_vout(&vout_array[1]);
             }
         }
 
@@ -1407,15 +1389,7 @@ impl DaemonHelper {
         let agvr_reward: u64 = if !is_agvr {
             0
         } else {
-            let vout_addr = vout_array[1]
-                .get("scriptPubKey")
-                .unwrap()
-                .get("addresses")
-                .unwrap()
-                .as_array()
-                .unwrap()[0]
-                .as_str()
-                .unwrap();
+            let vout_addr = self.get_addr_from_vout(&vout_array[1]);
 
             let agvr_vout = if vout_addr == stake_kernel { 1 } else { 2 };
 
@@ -1443,21 +1417,17 @@ impl DaemonHelper {
                 continue;
             }
 
-            let vout_addr_option: Option<&Value> =
-                vout.get("scriptPubKey").unwrap().get("addresses");
-
-            if vout_addr_option.is_some() {
-                let vout_addr: &str = vout_addr_option.unwrap().as_array().unwrap()[0]
-                    .as_str()
-                    .unwrap();
-                if DEV_FUND_ADDRESS.contains(&vout_addr) {
-                    continue;
-                }
+            let vout_addr: String = self.get_addr_from_vout(&vout);
+            if DEV_FUND_ADDRESS.contains(&vout_addr.as_str()) {
+                continue;
             }
 
-            let cs_addr: Option<&Value> = vout.get("scriptPubKey").unwrap().get("stakeaddresses");
-
-            if cs_addr.is_some() {
+            if vout
+                .get("scriptPubKey")
+                .unwrap_or(&Value::Object(serde_json::Map::new()))
+                .get("stakeaddresses")
+                .is_some()
+            {
                 is_coldstake = true;
             }
 
@@ -1982,6 +1952,36 @@ impl DaemonHelper {
         let precise = ((input * zeros).round()) / zeros;
         trace!("Precision set from {} to {}.", input, precise);
         return precise;
+    }
+
+    fn get_addr_from_vout(&self, vout: &Value) -> String {
+        let script_pub_key = match vout.get("scriptPubKey") {
+            Some(value) => value,
+            None => {
+                return "".to_string();
+            }
+        };
+
+        let addresses = match script_pub_key.get("addresses") {
+            Some(value) => value,
+            None => {
+                return "".to_string();
+            }
+        };
+
+        let addresses_array = match addresses.as_array() {
+            Some(value) => value,
+            None => {
+                return "".to_string();
+            }
+        };
+
+        if let Some(first_address) = addresses_array.get(0) {
+            if let Some(addr_str) = first_address.as_str() {
+                return addr_str.to_string();
+            }
+        }
+        "".to_string()
     }
 }
 
