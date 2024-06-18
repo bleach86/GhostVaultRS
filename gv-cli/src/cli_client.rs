@@ -240,6 +240,10 @@ async fn main() {
             if let Ok(enable_bot) = enable_bot_res {
                 if is_json {
                     println!("{}", enable_bot.as_str().unwrap());
+                } else {
+                    println!(
+                        "Telegram bot enabled. Restart GhostVault for changes to take effect."
+                    );
                 }
             } else if let Err(err) = enable_bot_res {
                 handle_command_error(err);
@@ -251,6 +255,10 @@ async fn main() {
             if let Ok(disable_bot) = disable_bot_res {
                 if is_json {
                     println!("{}", disable_bot.as_str().unwrap());
+                } else {
+                    println!(
+                        "Telegram bot disabled. Restart GhostVault for changes to take effect."
+                    );
                 }
             } else if let Err(err) = disable_bot_res {
                 handle_command_error(err);
@@ -415,16 +423,16 @@ fn display_help() {
     println!("  --daemon-data-dir=DAEMON_DATA_DIR    Set the Ghost daemon data directory");
     println!("  --json    Output in JSON format");
     println!("\nMethods:");
-    println!("  status    Get the current daemon state");
+    println!("  status    Get the current state of GhostVault");
     println!("  setrewardmode MODE [ADDRESS]    Set the reward mode");
     println!("  setminpayout AMOUNT    Set the minimum payout amount");
-    println!("  setrewardtime INTERVAL    Set the reward interval");
-    println!("  enablebot TOKEN USER    Enable the Telegram bot");
-    println!("  disablebot    Disable the Telegram bot");
+    println!("  setrewardtime INTERVAL    Set how often payouts are processed, in seconds");
+    println!("  enablebot TOKEN USER    Enable the Telegram bot (Restart required)");
+    println!("  disablebot    Disable the Telegram bot (Restart required)");
     println!("  setbotannounce TYPE VALUE    Set the bot announcement value");
-    println!("  extpubkey    Get the external public key");
+    println!("  extpubkey    Get the extended public key for zapping");
     println!("  shutdown    Shutdown the GhostVault server");
-    println!("  forceresync    Force a resync of the GhostVault server");
+    println!("  forceresync    Force a resync of ghostd");
     println!("  stats    Get the staking overview");
     println!("  getmnemonic    Get the wallet mnemonic");
     println!("  settimezone TIMEZONE    Set the timezone");

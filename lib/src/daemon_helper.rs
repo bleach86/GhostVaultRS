@@ -1332,14 +1332,22 @@ impl DaemonHelper {
 
         let tx_vin = &tx_details
             .get("decoded")
-            .unwrap()
+            .ok_or("No decoded value")?
             .get("vin")
-            .unwrap()
+            .ok_or("Vin not found")?
             .as_array()
-            .unwrap();
+            .ok_or("Vin not an array")?;
 
         let mut in_amount: u64 = 0;
         let mut stake_kernel: String = "".to_string();
+
+        let vout_array = tx_details
+            .get("decoded")
+            .ok_or("No decoded value")?
+            .get("vout")
+            .ok_or("Vout not found")?
+            .as_array()
+            .ok_or("Vout not an array")?;
 
         for vin in tx_vin.iter() {
             let prev_txid: &str = vin.get("txid").unwrap().as_str().unwrap();
@@ -1348,106 +1356,44 @@ impl DaemonHelper {
             let prev_tx: Result<Value, Box<dyn Error + Send + Sync>> =
                 self.get_transaction(prev_txid).await;
 
-            let prev_is_wallet: bool = if prev_tx.is_ok() { true } else { false };
-
-            in_amount += if prev_is_wallet {
-                prev_tx
-                    .as_ref()
-                    .unwrap()
+            if prev_tx.is_ok() {
+                let prev_tx = prev_tx.unwrap();
+                let prev_vout_array = prev_tx
                     .get("decoded")
-                    .unwrap()
+                    .ok_or("No decoded value")?
                     .get("vout")
-                    .unwrap()
+                    .ok_or("Vout not found")?
                     .as_array()
-                    .unwrap()[prev_vout as usize]
+                    .ok_or("Vout not an array")?;
+
+                in_amount += prev_vout_array[prev_vout as usize]
                     .get("valueSat")
                     .unwrap()
                     .as_u64()
-                    .unwrap()
-            } else {
-                0
-            };
+                    .unwrap();
 
-            if prev_is_wallet && stake_kernel.is_empty() {
-                stake_kernel = prev_tx
-                    .unwrap()
-                    .get("decoded")
-                    .unwrap()
-                    .get("vout")
-                    .unwrap()
-                    .as_array()
-                    .unwrap()[prev_vout as usize]
-                    .get("scriptPubKey")
-                    .unwrap()
-                    .get("addresses")
-                    .unwrap()
-                    .as_array()
-                    .unwrap()[0]
-                    .as_str()
-                    .unwrap()
-                    .to_string()
-            } else if prev_is_wallet && stake_kernel.is_empty() {
-                stake_kernel = tx_details
-                    .get("decoded")
-                    .unwrap()
-                    .get("vout")
-                    .unwrap()
-                    .as_array()
-                    .unwrap()[1]
-                    .get("scriptPubKey")
-                    .unwrap()
-                    .get("addresses")
-                    .unwrap()
-                    .as_array()
-                    .unwrap()[0]
-                    .as_str()
-                    .unwrap()
-                    .to_string()
+                if stake_kernel.is_empty() {
+                    stake_kernel = self.get_addr_from_vout(&prev_vout_array[prev_vout as usize]);
+                }
+            } else {
+                stake_kernel = self.get_addr_from_vout(&vout_array[1]);
             }
         }
 
         let is_agvr: bool = if height < AGVR_ACTIVATION_HEIGHT {
             false
         } else {
-            tx_details
-                .get("decoded")
-                .unwrap()
-                .get("vout")
-                .unwrap()
-                .as_array()
-                .unwrap()[0]
-                .get("gvr_fund_cfwd")
-                .is_none()
+            vout_array[0].get("gvr_fund_cfwd").is_none()
         };
 
         let agvr_reward: u64 = if !is_agvr {
             0
         } else {
-            let vout_addr = tx_details
-                .get("decoded")
-                .unwrap()
-                .get("vout")
-                .unwrap()
-                .as_array()
-                .unwrap()[1]
-                .get("scriptPubKey")
-                .unwrap()
-                .get("addresses")
-                .unwrap()
-                .as_array()
-                .unwrap()[0]
-                .as_str()
-                .unwrap();
+            let vout_addr = self.get_addr_from_vout(&vout_array[1]);
 
             let agvr_vout = if vout_addr == stake_kernel { 1 } else { 2 };
 
-            tx_details
-                .get("decoded")
-                .unwrap()
-                .get("vout")
-                .unwrap()
-                .as_array()
-                .unwrap()[agvr_vout]
+            vout_array[agvr_vout]
                 .get("valueSat")
                 .unwrap()
                 .as_u64()
@@ -1457,37 +1403,31 @@ impl DaemonHelper {
         let mut vout_total: u64 = 0;
         let mut is_coldstake: bool = false;
 
-        let vout_array = tx_details
-            .get("decoded")
-            .unwrap()
-            .get("vout")
-            .unwrap()
-            .as_array()
-            .unwrap();
-
         for vout in vout_array {
             let blacklist_type: Vec<&str> = vec!["data", "anon", "blind"];
 
-            let vout_type: &str = vout.get("type").unwrap().as_str().unwrap();
+            let default_vout_type = Value::String(String::new());
+
+            let vout_type: &str = vout
+                .get("type")
+                .unwrap_or(&default_vout_type)
+                .as_str()
+                .unwrap();
             if blacklist_type.contains(&vout_type) {
                 continue;
             }
 
-            let vout_addr_option: Option<&Value> =
-                vout.get("scriptPubKey").unwrap().get("addresses");
-
-            if vout_addr_option.is_some() {
-                let vout_addr: &str = vout_addr_option.unwrap().as_array().unwrap()[0]
-                    .as_str()
-                    .unwrap();
-                if DEV_FUND_ADDRESS.contains(&vout_addr) {
-                    continue;
-                }
+            let vout_addr: String = self.get_addr_from_vout(&vout);
+            if DEV_FUND_ADDRESS.contains(&vout_addr.as_str()) {
+                continue;
             }
 
-            let cs_addr: Option<&Value> = vout.get("scriptPubKey").unwrap().get("stakeaddresses");
-
-            if cs_addr.is_some() {
+            if vout
+                .get("scriptPubKey")
+                .unwrap_or(&Value::Object(serde_json::Map::new()))
+                .get("stakeaddresses")
+                .is_some()
+            {
                 is_coldstake = true;
             }
 
@@ -2012,6 +1952,36 @@ impl DaemonHelper {
         let precise = ((input * zeros).round()) / zeros;
         trace!("Precision set from {} to {}.", input, precise);
         return precise;
+    }
+
+    fn get_addr_from_vout(&self, vout: &Value) -> String {
+        let script_pub_key = match vout.get("scriptPubKey") {
+            Some(value) => value,
+            None => {
+                return String::new();
+            }
+        };
+
+        let addresses = match script_pub_key.get("addresses") {
+            Some(value) => value,
+            None => {
+                return String::new();
+            }
+        };
+
+        let addresses_array = match addresses.as_array() {
+            Some(value) => value,
+            None => {
+                return String::new();
+            }
+        };
+
+        if let Some(first_address) = addresses_array.get(0) {
+            if let Some(addr_str) = first_address.as_str() {
+                return addr_str.to_string();
+            }
+        }
+        String::new()
     }
 }
 
