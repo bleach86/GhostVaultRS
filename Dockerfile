@@ -17,8 +17,12 @@ RUN useradd -ms /bin/bash gvuser && \
     echo "gvuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Create persistent directory
-RUN mkdir -p /data && \
-    chown -R gvuser:gvuser /data
+RUN mkdir -p /data /home/gvuser/GhostVault && \
+    chown -R gvuser:gvuser /data && \
+    chown -R gvuser:gvuser /home/gvuser/GhostVault
+
+# link lagacy GhostVault data directory
+RUN ln -s /data/GhostVault/daemon.json /home/gvuser/GhostVault/daemon.json
 
 # Switch to the non-root user
 USER gvuser
