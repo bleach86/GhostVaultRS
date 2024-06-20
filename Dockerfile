@@ -1,8 +1,8 @@
-# Use an official Ubuntu as a parent image
+# Use an official rust as a parent image
 FROM rust:slim-bookworm
 
 # Set environment variables
-#ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies
 RUN apt-get update && \
@@ -31,9 +31,6 @@ RUN ln -s /legacy_data/daemon.json /home/gvuser/GhostVault/daemon.json
 
 # Switch to the non-root user
 USER gvuser
-
-WORKDIR /home/gvuser
-
 
 # Create application directory
 WORKDIR /home/gvuser/app
