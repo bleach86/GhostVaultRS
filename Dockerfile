@@ -26,7 +26,7 @@ RUN mkdir -p /data/ghostd_data /data/gv_data /home/gvuser/GhostVault /legacy_dat
 
 
 # Link link legacy data to the new dir in home
-RUN ln -s /legacy_data /home/gvuser/GhostVault
+RUN ln -s /legacy_data/daemon.json /home/gvuser/GhostVault/daemon.json
 
 
 # Switch to the non-root user
@@ -45,7 +45,7 @@ COPY . .
 RUN cargo install --path .
 
 # Ensure the persistent directories are accessible
-VOLUME /data/ghostd_data /data/gv_data /home/gvuser/GhostVault
+VOLUME /data/ghostd_data /data/gv_data /home/gvuser/GhostVault /legacy_data
 
 # Make the persistent directories available as environment variables
 ENV ghostd_data=/data/ghostd_data
