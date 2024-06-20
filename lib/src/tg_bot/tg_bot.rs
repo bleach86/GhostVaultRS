@@ -569,16 +569,26 @@ async fn command_handler(
         }
 
         cmd if cmd.starts_with("\u{1F4CB} overview") => {
-            let cli_res: Value = cli_caller.call_get_overview().await.unwrap();
-            let header: String = escape("👻 Overview 👻\n\n");
-            let staking_data: StakingDataOverview = serde_json::from_value(cli_res).unwrap();
+            if server_ready.daemon_ready && server_ready.ready {
+                let cli_res: Value = cli_caller.call_get_overview().await.unwrap();
+                let header: String = escape("👻 Overview 👻\n\n");
+                let staking_data: StakingDataOverview = serde_json::from_value(cli_res).unwrap();
 
-            let overview: String = serde_json::to_string_pretty(&staking_data).unwrap();
-            let code_block: String = format!("```\n{}\n```\n", overview);
+                let overview: String = serde_json::to_string_pretty(&staking_data).unwrap();
+                let code_block: String = format!("```\n{}\n```\n", overview);
 
-            let message: String = format!("{}{}", header, code_block);
+                let message: String = format!("{}{}", header, code_block);
 
-            bot.send_message(msg.chat.id, message).await?
+                bot.send_message(msg.chat.id, message).await?
+            } else {
+                let reason = server_unready_message(&server_ready);
+
+                let message = escape("Ghost daemon unavailable.\nReason:");
+
+                let reasoned_message = format!("{}{}", message, reason);
+
+                bot.send_message(msg.chat.id, reasoned_message).await?
+            }
         }
 
         cmd if cmd.starts_with("\u{1F4B0} pending rewards") => {
