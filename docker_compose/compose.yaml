@@ -1,0 +1,23 @@
+version: "3"
+services:
+  ghostvault:
+    image: tuxprint/ghostvault:latest
+    environment:
+      # Uncomment the following lines and set the values to enable the Telegram bot
+
+      # DM @BotFather on Telegram to get your bot token.
+      #- TELOXIDE_TOKEN=
+
+      # DM @userinfobot on Telegram to get your user ID.
+      #- GV_TG_USER=
+    volumes:
+      - ${HOME}:/data
+
+    restart: always
+
+  # Comment out the following lines if you don't want to use Watchtower for automatic updates.
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --cleanup
