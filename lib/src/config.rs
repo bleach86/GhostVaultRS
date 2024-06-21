@@ -316,7 +316,11 @@ impl GVConfig {
         if !missing_keys.is_empty() {
             info!("Invalid ghostd config found! Attempting to fix...");
 
-            daemon.stop_daemon().await.unwrap();
+            let res = daemon.stop_daemon().await;
+
+            if res.is_err() {
+                return Err(res.err().unwrap());
+            }
 
             for (key, value) in missing_keys {
                 file_ops::update_ghost_config(&daemon_conf_file, key, Some(value))?;
