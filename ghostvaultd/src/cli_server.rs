@@ -440,11 +440,16 @@ impl GvCLIServer {
         info!("Daemon offline, waiting for restart...");
         self.set_daemon_online(false).await;
         let mut server_ready: ServerReadyDB = self.db.get_server_ready().unwrap();
+        let is_docker: bool = env::vars().any(|(key, _)| key == "DOCKER_RUNNING");
 
         server_ready.daemon_ready = false;
         server_ready.reason = Some("Daemon offline".to_string());
 
         self.db.set_server_ready(&server_ready).await.unwrap();
+
+        if is_docker {
+            return;
+        }
 
         if self.tg_bot_active {
             let current_time = chrono::Utc::now();
