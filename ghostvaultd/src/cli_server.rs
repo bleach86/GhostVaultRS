@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use service::{
     config::GVConfig,
-    constants::{MIN_TX_VALUE, TMP_PATH, VERSION},
+    constants::{GV_PID_FILE, MIN_TX_VALUE, TMP_PATH, VERSION},
     daemon_helper::{listen_for_events, listen_zmq, DaemonHelper, DaemonState, TxidAndWallet},
     file_ops,
     gv_client_methods::{
@@ -23,7 +23,7 @@ use service::{
     task_runner::task_runner,
     GvCLI,
 };
-use std::{net::IpAddr, path::PathBuf, sync::Arc, time::Duration};
+use std::{env, net::IpAddr, path::PathBuf, sync::Arc, time::Duration};
 use systemstat::{LoadAverage, Platform, System};
 use tarpc::{
     context,
@@ -1567,6 +1567,18 @@ impl GvCLI for GvCLIServer {
     }
 
     async fn shutdown(self, _: context::Context) -> Value {
+        let conf = self.gv_config.read().await;
+        let gv_data_dir = conf.gv_home.clone();
+        drop(conf);
+        let pid_file: PathBuf = gv_data_dir.join(GV_PID_FILE);
+        file_ops::rm_file(&pid_file).unwrap();
+
+        let is_docker: bool = env::vars().any(|(key, _)| key == "DOCKER_RUNNING");
+
+        if is_docker {
+            let _ = self.daemon.stop_daemon().await;
+        }
+
         tokio::spawn(async move {
             do_shutdown().await;
         });

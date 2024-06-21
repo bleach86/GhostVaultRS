@@ -10,7 +10,8 @@ RUN apt-get update && \
     build-essential \
     libssl-dev \
     pkg-config \
-    libfontconfig-dev
+    libfontconfig-dev \ 
+    tini
     
 # Create a non-root user
 RUN useradd -ms /bin/bash gvuser && \
@@ -40,6 +41,9 @@ RUN cargo install --path .
 VOLUME /data
 
 ENV DOCKER_RUNNING=true
+
+# Use tini to ensure proper signal handling
+ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # Run the compiled binary
 CMD ["ghostvaultd", "--gv-data-dir", "/data/.ghostvault", "--daemon-data-dir", "/data/.ghost", "--console"]
