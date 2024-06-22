@@ -691,6 +691,23 @@ impl CLICaller {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
 
+        let daemon_check = tokio::select! {
+            res1 = self.client.get_daemon_online(ctx) => { res1 }
+            res2 = self.client.get_daemon_online(ctx) => { res2 }
+        };
+
+        match daemon_check {
+            Ok(result) => {
+                if result.is_object() {
+                    let res_obj = serde_json::to_string_pretty(&result).unwrap();
+                    let msg = format!("GhostVault Not Ready!\n{}", res_obj);
+                    self.display_result(&msg);
+                    return Ok(result);
+                }
+            }
+            Err(e) => panic!("Failed to execute command: {:?}", e),
+        }
+
         let result: Result<Value, client::RpcError> = async move {
             // Send the request twice, just to be safe! ;)
             tokio::select! {

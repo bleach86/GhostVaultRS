@@ -105,11 +105,13 @@ fn main() {
     let do_daemon: bool = flags.console.clone() == false;
     let is_windows: bool = cfg!(target_os = "windows");
 
+    let is_docker = env::vars().any(|(key, _)| key == "DOCKER_RUNNING");
+
     // Prevent running duplicate instances of GhostVault
     let pid_file: PathBuf = gv_data_dir.join(GV_PID_FILE);
 
     let pid_from_file: u32 = file_ops::get_pid(&gv_data_dir, GV_PID_FILE);
-    if file_ops::pid_exists(pid_from_file) {
+    if file_ops::pid_exists(pid_from_file) && !is_docker {
         let running_msg: String = format!(
             "Detected running GhostVault instance at PID: {}",
             pid_from_file
@@ -117,11 +119,6 @@ fn main() {
 
         info!("{}", running_msg);
         info!("Exiting!");
-
-        if do_daemon {
-            println!("{}", running_msg);
-            println!("Exiting!");
-        }
 
         exit(0);
     }
@@ -163,12 +160,28 @@ async fn run_init(gv_home: &PathBuf, daemon_data_dir: &PathBuf, first_run: bool)
         .await
         .expect("Failed to start up");
 
-    let conf = config.read().await;
+    let conf_clone = Arc::clone(&config);
+
+    let mut conf = config.write().await;
     let config_clone_tg_bot = Arc::clone(&config);
     let config_clone_rpc = Arc::clone(&config);
 
-    let bot_token: Option<String> = conf.bot_token.clone();
-    let tg_user: Option<String> = conf.tg_user.clone();
+    let mut bot_token: Option<String> = conf.bot_token.clone();
+    let mut tg_user: Option<String> = conf.tg_user.clone();
+
+    for (key, value) in env::vars() {
+        match key.as_str() {
+            "TELOXIDE_TOKEN" => {
+                bot_token = Some(value.clone());
+                conf.update_gv_config("TELOXIDE_TOKEN", &value).unwrap();
+            }
+            "GV_TG_USER" => {
+                tg_user = Some(value.clone());
+                conf.update_gv_config("TELEGRAM_USER", &value).unwrap();
+            }
+            _ => {}
+        }
+    }
 
     drop(conf);
 
@@ -198,6 +211,25 @@ async fn run_init(gv_home: &PathBuf, daemon_data_dir: &PathBuf, first_run: bool)
     } else {
         start_rpc.await.expect("Failed to await background task");
     }
+
+    shutdown(&conf_clone).await;
+}
+
+async fn shutdown(config: &Arc<async_RwLock<GVConfig>>) {
+    info!("Shutting down GhostVault...");
+    let conf = config.read().await;
+    let gv_data_dir = conf.gv_home.clone();
+    let pid_file: PathBuf = gv_data_dir.join(GV_PID_FILE);
+    file_ops::rm_file(&pid_file).unwrap();
+
+    let is_docker = env::vars().any(|(key, _)| key == "DOCKER_RUNNING");
+
+    if is_docker {
+        let daemon = DaemonHelper::new(&config, "cold").await;
+        let _stop_daemon = daemon.stop_daemon().await;
+    }
+
+    exit(0);
 }
 
 async fn startup(
@@ -208,6 +240,17 @@ async fn startup(
     let config_data: config::GVConfig = GVConfig::new(&gv_home, &daemon_data_dir).unwrap();
 
     let config: Arc<async_RwLock<GVConfig>> = Arc::new(async_RwLock::new(config_data));
+
+    let conf_clone_shutdown = Arc::clone(&config);
+
+    ctrlc::set_handler(move || {
+        let shutdown_config = Arc::clone(&conf_clone_shutdown);
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            shutdown(&shutdown_config).await;
+        });
+    })
+    .expect("Error setting Ctrl-C handler");
 
     let mut conf_lock = config.write().await;
 

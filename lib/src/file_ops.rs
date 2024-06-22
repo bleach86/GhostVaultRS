@@ -1,6 +1,6 @@
 use home;
-use log::info;
-use serde_json::{Error as json_Error, Map, Value};
+use log::{error, info};
+use serde_json::{json, Error as json_Error, Map, Value};
 use std::fs;
 use std::{
     env::temp_dir,
@@ -61,7 +61,7 @@ pub fn init_data_dir(path: &PathBuf) -> std::io::Result<()> {
 }
 
 pub fn read_json(path: &PathBuf) -> Result<Value, json_Error> {
-    let file_str: String = fs::read_to_string(path).expect("Unable to read file");
+    let file_str: String = fs::read_to_string(path).unwrap_or(json!({}).to_string());
     let json_data: Value = serde_json::from_str(&file_str.as_str())?;
 
     Ok(json_data)
@@ -74,7 +74,7 @@ pub fn get_pid(conf_path: &PathBuf, pid_file: &str) -> u32 {
         return 0;
     }
 
-    let mut file_str: String = fs::read_to_string(pid_file).expect("Unable to read file");
+    let mut file_str: String = fs::read_to_string(pid_file).unwrap_or_default();
 
     remove_whitespace(&mut file_str);
     file_str.parse::<u32>().unwrap()
@@ -154,10 +154,16 @@ pub fn ghost_config_to_value(path: &PathBuf) -> Result<Value, json_Error> {
 }
 
 fn lines_from_file(filename: &PathBuf) -> Vec<String> {
-    let file: File = File::open(filename).expect("no such file");
+    let file_res: Result<File, std::io::Error> = File::open(filename);
+
+    let file = match file_res {
+        Ok(file) => file,
+        Err(_) => return Vec::new(),
+    };
+
     let buf: BufReader<File> = BufReader::new(file);
     buf.lines()
-        .map(|l: Result<String, std::io::Error>| l.expect("Could not parse line"))
+        .map(|l: Result<String, std::io::Error>| l.unwrap_or_default())
         .collect()
 }
 
@@ -198,14 +204,21 @@ pub fn read_crontab() -> String {
         .arg("-l")
         .arg("-u")
         .arg(username)
-        .output()
-        .expect("Failed to execute crontab command");
+        .output();
 
-    if output.status.success() {
-        String::from_utf8_lossy(&output.stdout).to_string()
-    } else {
-        eprintln!("Error reading crontab");
-        String::new()
+    match output {
+        Ok(output) => {
+            if output.status.success() {
+                String::from_utf8_lossy(&output.stdout).to_string()
+            } else {
+                error!("Error reading crontab");
+                String::new()
+            }
+        }
+        Err(_) => {
+            error!("Error reading crontab");
+            String::new()
+        }
     }
 }
 
@@ -238,25 +251,28 @@ pub fn write_crontab(modified_crontab: &str) -> std::io::Result<()> {
     };
 
     let temp_file_path: PathBuf = temp_dir().join("modified_crontab.txt");
-    let mut temp_file: File =
-        File::create(&temp_file_path).expect("Failed to create temporary file");
+    let mut temp_file: File = File::create(&temp_file_path)?;
 
-    temp_file
-        .write_all(modified_crontab.as_bytes())
-        .expect("Failed to write to temporary file");
+    temp_file.write_all(modified_crontab.as_bytes())?;
 
     let status = Command::new("crontab")
         .arg("-u")
         .arg(username)
         .arg(&temp_file_path)
-        .status()
-        .expect("Failed to execute crontab command");
+        .status();
 
-    std::fs::remove_file(&temp_file_path).expect("Failed to delete temporary file");
-
-    if !status.success() {
-        eprintln!("Error writing crontab");
+    match status {
+        Ok(status) => {
+            if status.success() {
+                info!("Successfully wrote crontab");
+            } else {
+                error!("Error writing crontab");
+            }
+        }
+        Err(_) => error!("Error writing crontab"),
     }
+
+    std::fs::remove_file(&temp_file_path)?;
 
     Ok(())
 }
@@ -266,10 +282,12 @@ pub fn is_crontab_installed() -> bool {
         .arg("-l") // Check the version to see if crontab is installed
         .stdout(Stdio::null())
         .stderr(Stdio::null())
-        .status()
-        .expect("Failed to check crontab availability");
+        .status();
 
-    status.success()
+    match status {
+        Ok(status) => status.success(),
+        Err(_) => false,
+    }
 }
 
 pub fn pid_exists(pid: u32) -> bool {
