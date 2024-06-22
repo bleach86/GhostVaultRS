@@ -2,8 +2,8 @@ version: "3"
 services:
   ghostvault:
     image: tuxprint/ghostvault:latest
-    stop_grace_period: 120s
-    #environment:
+    stop_grace_period: 600s
+    environment:
     # Uncomment the following lines and set the values to enable the Telegram bot
 
     # DM @BotFather on Telegram to get your bot token.
@@ -12,7 +12,7 @@ services:
     # DM @userinfobot on Telegram to get your user ID.
     #- GV_TG_USER=
     volumes:
-      - ${HOME}:/data
+      - ${HOME}/GV_DATA/:/data
 
     restart: always
 
