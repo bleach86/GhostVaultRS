@@ -1,6 +1,6 @@
 [package]
 name = "GhostVaultRS"
-version = "0.9.3"
+version = "0.9.4"
 edition = "2021"
 description = "GhostVault Rust implementation"
 repository = "https://github.com/bleach86/GhostVaultRS"
@@ -19,9 +19,7 @@ tokio = { version = "1.8", features = ["rt-multi-thread", "macros", "net"] }
 serde = { version = "1.0.166", features = ["derive"] }
 serde_json = "1.0.100"
 reqwest = { version = "0.11", features = ["json"] }
-bitcoincore-zmq = { git = "https://github.com/bleach86/rust-ghostcore-zmq.git", branch = "master", features = [
-    "async",
-] }
+ghostcore-zmq = { version = "1.4.0", features = ["async"] }
 
 hyper = { version = "0.14.21", default-features = false, features = [
     "tcp",

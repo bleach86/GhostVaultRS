@@ -11,12 +11,12 @@ use crate::{
     gvdb::{DaemonStatusDB, NewStakeStatusDB, RewardsDB, ZapStatusDB, GVDB},
     rpc::{self, RPCURL},
 };
-use bitcoincore_zmq::{
+use futures_util::FutureExt;
+use futures_util::StreamExt;
+use ghostcore_zmq::{
     subscribe_async, Message,
     Message::{HashBlock, HashWTx},
 };
-use futures_util::FutureExt;
-use futures_util::StreamExt;
 use log::{error, info, trace, warn};
 use rand::prelude::SliceRandom;
 use rand::Rng;
@@ -1992,7 +1992,7 @@ pub async fn listen_zmq(
 ) -> Result<(), Box<dyn Error>> {
     info!("Starting ZMQ listener...");
     let listen_addr_str: Vec<&str> = listen_addr.iter().map(|s| s.as_str()).collect();
-    let mut stream: bitcoincore_zmq::MessageStream = subscribe_async(&listen_addr_str).unwrap();
+    let mut stream: ghostcore_zmq::MessageStream = subscribe_async(&listen_addr_str).unwrap();
 
     while !db.get_server_ready().unwrap().ready {
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
