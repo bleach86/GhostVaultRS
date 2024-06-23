@@ -273,7 +273,7 @@ impl CLICaller {
 
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -294,7 +294,7 @@ impl CLICaller {
                 self.display_result(result.as_str().unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -319,7 +319,7 @@ impl CLICaller {
                 self.display_result(result.as_str().unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -343,7 +343,7 @@ impl CLICaller {
                 self.display_result(result.as_str().unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -367,7 +367,7 @@ impl CLICaller {
                 self.display_result(result.as_str().unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -390,7 +390,7 @@ impl CLICaller {
                 self.display_result(result.as_str().unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -414,7 +414,7 @@ impl CLICaller {
                 self.display_result(result.as_str().unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -440,7 +440,7 @@ impl CLICaller {
                     return Ok(result);
                 }
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => return Err(e.into()),
         }
 
         let result: Result<Value, client::RpcError> = async move {
@@ -457,7 +457,7 @@ impl CLICaller {
                 self.display_result(result.as_str().unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -486,7 +486,7 @@ impl CLICaller {
 
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -510,7 +510,7 @@ impl CLICaller {
                 self.display_result(&serde_json::to_string_pretty(&result).unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -535,7 +535,7 @@ impl CLICaller {
                     return Ok(result);
                 }
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => return Err(e.into()),
         }
 
         let result: Result<Value, client::RpcError> = async move {
@@ -553,7 +553,7 @@ impl CLICaller {
                 self.display_result(&res);
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -577,7 +577,7 @@ impl CLICaller {
                     return Ok(result);
                 }
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => return Err(e.into()),
         }
 
         let result: Result<Value, client::RpcError> = async move {
@@ -595,7 +595,7 @@ impl CLICaller {
                 self.display_result(&res);
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -655,7 +655,7 @@ impl CLICaller {
                 self.display_result(&serde_json::to_string_pretty(&result).unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -679,7 +679,7 @@ impl CLICaller {
                 self.display_result(&serde_json::to_string_pretty(&result).unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -705,7 +705,7 @@ impl CLICaller {
                 self.display_result(result.as_str().unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -729,7 +729,7 @@ impl CLICaller {
                     return Ok(result);
                 }
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => return Err(e.into()),
         }
 
         let result: Result<Value, client::RpcError> = async move {
@@ -749,7 +749,7 @@ impl CLICaller {
                 self.display_result(&serde_json::to_string_pretty(&staking_data).unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -778,7 +778,7 @@ impl CLICaller {
                 }
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -805,7 +805,7 @@ impl CLICaller {
                 self.display_result(result.as_str().unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -831,7 +831,7 @@ impl CLICaller {
                 self.display_result(result.to_string().as_str());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -858,7 +858,7 @@ impl CLICaller {
                 self.display_result(result.to_string().as_str());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -882,7 +882,7 @@ impl CLICaller {
                 self.display_result(result.as_str().unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -907,7 +907,7 @@ impl CLICaller {
                 self.display_result(result.as_str().unwrap());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
