@@ -7,7 +7,6 @@ name = "GhostVaultRS"
 version = "0.9.3"
 dependencies = [
  "anyhow",
- "bitcoincore-zmq",
  "chrono",
  "chrono-tz",
  "clap",
@@ -19,6 +18,7 @@ dependencies = [
  "flate2",
  "futures",
  "futures-util",
+ "ghostcore-zmq",
  "home",
  "humantime 2.1.0",
  "hyper",
@@ -306,18 +306,6 @@ checksum = "1930a4dabfebb8d7d9992db18ebe3ae2876f0a305fab206fd168df931ede293b"
 dependencies = [
  "bitcoin-internals",
  "hex-conservative",
-]
-
-[[package]]
-name = "bitcoincore-zmq"
-version = "1.4.0"
-source = "git+https://github.com/bleach86/rust-ghostcore-zmq.git?branch=master#7a28c4ac0f5ef66112f8008fe42b5f026fed837b"
-dependencies = [
- "async_zmq",
- "bitcoin",
- "futures-util",
- "zmq",
- "zmq-sys",
 ]
 
 [[package]]
@@ -1209,6 +1197,19 @@ dependencies = [
  "cfg-if 1.0.0",
  "libc",
  "wasi",
+]
+
+[[package]]
+name = "ghostcore-zmq"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0aad5b43189a4e35a3496d9d40bc5b2960a5bb0b5a73979b7f2877beaa530e6f"
+dependencies = [
+ "async_zmq",
+ "bitcoin",
+ "futures-util",
+ "zmq",
+ "zmq-sys",
 ]
 
 [[package]]
