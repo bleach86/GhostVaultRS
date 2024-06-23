@@ -110,7 +110,7 @@ impl CLICaller {
     pub async fn new(
         cli_address: &str,
         json_out: bool,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         let transport =
             match tarpc::serde_transport::tcp::connect(&cli_address, Json::default).await {
                 Ok(transport) => transport,
@@ -134,7 +134,9 @@ impl CLICaller {
         })
     }
 
-    pub async fn call_getblockcount(&self) -> Result<Value, Box<dyn std::error::Error>> {
+    pub async fn call_getblockcount(
+        &self,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
 
@@ -197,7 +199,7 @@ impl CLICaller {
         &self,
         block_hash: String,
         height: u32,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let _result: Result<(), client::RpcError> = async move {
@@ -216,7 +218,7 @@ impl CLICaller {
     pub async fn call_new_wallet_tx(
         &self,
         txid_and_wal: TxidAndWallet,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let _result: Result<(), client::RpcError> = async move {
@@ -232,7 +234,9 @@ impl CLICaller {
         Ok(())
     }
 
-    pub async fn call_get_daemon_state(&self) -> Result<Value, Box<dyn std::error::Error>> {
+    pub async fn call_get_daemon_state(
+        &self,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let daemon_check = tokio::select! {
@@ -273,7 +277,7 @@ impl CLICaller {
         }
     }
 
-    pub async fn call_shutdown(&self) -> Result<Value, Box<dyn std::error::Error>> {
+    pub async fn call_shutdown(&self) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let result: Result<Value, client::RpcError> = async move {
@@ -298,7 +302,7 @@ impl CLICaller {
         &self,
         token: String,
         user: String,
-    ) -> Result<Value, Box<dyn std::error::Error>> {
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let result: Result<Value, client::RpcError> = async move {
@@ -319,7 +323,9 @@ impl CLICaller {
         }
     }
 
-    pub async fn call_disable_telegram_bot(&self) -> Result<Value, Box<dyn std::error::Error>> {
+    pub async fn call_disable_telegram_bot(
+        &self,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
 
@@ -344,7 +350,7 @@ impl CLICaller {
     pub async fn call_set_reward_interval(
         &self,
         interval: String,
-    ) -> Result<Value, Box<dyn std::error::Error>> {
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let result: Result<Value, client::RpcError> = async move {
@@ -365,7 +371,9 @@ impl CLICaller {
         }
     }
 
-    pub async fn call_get_ext_pub_key(&self) -> Result<Value, Box<dyn std::error::Error>> {
+    pub async fn call_get_ext_pub_key(
+        &self,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let result: Result<Value, client::RpcError> = async move {
@@ -389,7 +397,7 @@ impl CLICaller {
     pub async fn call_set_payout_min(
         &self,
         min_payout: f64,
-    ) -> Result<Value, Box<dyn std::error::Error>> {
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let result: Result<Value, client::RpcError> = async move {
@@ -414,7 +422,7 @@ impl CLICaller {
         &self,
         mode: String,
         addr: Option<String>,
-    ) -> Result<Value, Box<dyn std::error::Error>> {
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
 
@@ -453,7 +461,9 @@ impl CLICaller {
         }
     }
 
-    pub async fn call_process_daemon_update(&self) -> Result<Value, Box<dyn std::error::Error>> {
+    pub async fn call_process_daemon_update(
+        &self,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let result: Result<Value, client::RpcError> = async move {
@@ -480,7 +490,9 @@ impl CLICaller {
         }
     }
 
-    pub async fn call_get_reward_options(&self) -> Result<Value, Box<dyn std::error::Error>> {
+    pub async fn call_get_reward_options(
+        &self,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let result: Result<Value, client::RpcError> = async move {
@@ -505,7 +517,7 @@ impl CLICaller {
     pub async fn call_validate_address(
         &self,
         addr: String,
-    ) -> Result<Value, Box<dyn std::error::Error>> {
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
 
@@ -545,7 +557,9 @@ impl CLICaller {
         }
     }
 
-    pub async fn call_get_pending_rewards(&self) -> Result<Value, Box<dyn std::error::Error>> {
+    pub async fn call_get_pending_rewards(
+        &self,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
 
@@ -585,7 +599,9 @@ impl CLICaller {
         }
     }
 
-    pub async fn call_process_reward_payout(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn call_process_reward_payout(
+        &self,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let _result: Result<(), client::RpcError> = async move {
@@ -601,7 +617,9 @@ impl CLICaller {
         Ok(())
     }
 
-    pub async fn call_start_server_tasks(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn call_start_server_tasks(
+        &self,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let _result: Result<(), client::RpcError> = async move {
@@ -617,7 +635,9 @@ impl CLICaller {
         Ok(())
     }
 
-    pub async fn call_get_version_info(&self) -> Result<Value, Box<dyn std::error::Error>> {
+    pub async fn call_get_version_info(
+        &self,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
 
@@ -639,7 +659,9 @@ impl CLICaller {
         }
     }
 
-    pub async fn call_check_chain(&self) -> Result<Value, Box<dyn std::error::Error>> {
+    pub async fn call_check_chain(
+        &self,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
 
@@ -665,7 +687,7 @@ impl CLICaller {
         &self,
         msg_type: String,
         new_val: bool,
-    ) -> Result<Value, Box<dyn std::error::Error>> {
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let result: Result<Value, client::RpcError> = async move {
@@ -687,7 +709,9 @@ impl CLICaller {
         }
     }
 
-    pub async fn call_get_overview(&self) -> Result<Value, Box<dyn std::error::Error>> {
+    pub async fn call_get_overview(
+        &self,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
 
@@ -729,7 +753,9 @@ impl CLICaller {
         }
     }
 
-    pub async fn call_get_mnemonic(&self) -> Result<Value, Box<dyn std::error::Error>> {
+    pub async fn call_get_mnemonic(
+        &self,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
 
@@ -760,7 +786,7 @@ impl CLICaller {
         &self,
         mnemonic: String,
         wallet_name: String,
-    ) -> Result<Value, Box<dyn std::error::Error>> {
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + time::Duration::from_secs(60 * 120);
 
@@ -787,7 +813,7 @@ impl CLICaller {
         &self,
         start: u64,
         end: u64,
-    ) -> Result<Value, Box<dyn std::error::Error>> {
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let result: Result<Value, client::RpcError> = async move {
@@ -814,7 +840,7 @@ impl CLICaller {
         start: u64,
         end: u64,
         division: String,
-    ) -> Result<Value, Box<dyn std::error::Error>> {
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let result: Result<Value, client::RpcError> = async move {
@@ -836,7 +862,9 @@ impl CLICaller {
         }
     }
 
-    pub async fn call_force_resync(&self) -> Result<Value, Box<dyn std::error::Error>> {
+    pub async fn call_force_resync(
+        &self,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let result: Result<Value, client::RpcError> = async move {
@@ -861,7 +889,7 @@ impl CLICaller {
     pub async fn call_set_timezone(
         &self,
         timezone: String,
-    ) -> Result<Value, Box<dyn std::error::Error>> {
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
         let mut ctx: Context = context::current();
         ctx.deadline = SystemTime::now() + self.timeout;
         let result: Result<Value, client::RpcError> = async move {

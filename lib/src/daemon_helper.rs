@@ -1989,7 +1989,7 @@ pub async fn listen_zmq(
     listen_addr: &[String],
     cli_address: &str,
     db: Arc<GVDB>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     info!("Starting ZMQ listener...");
     let listen_addr_str: Vec<&str> = listen_addr.iter().map(|s| s.as_str()).collect();
     let mut stream: ghostcore_zmq::MessageStream = subscribe_async(&listen_addr_str).unwrap();
@@ -2144,7 +2144,7 @@ async fn connect_to_servers(
 pub async fn listen_for_events(
     gv_config: Arc<async_RwLock<GVConfig>>,
     db: Arc<GVDB>,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut urls: Vec<&str> = vec![
         "https://api.tuxprint.com",
         "https://api2.tuxprint.com",
