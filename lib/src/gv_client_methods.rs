@@ -125,7 +125,7 @@ impl CLICaller {
 
         let client: GvCLIClient = GvCLIClient::new(client::Config::default(), transport).spawn();
 
-        let timeout: time::Duration = std::time::Duration::from_secs(30);
+        let timeout: time::Duration = std::time::Duration::from_secs(45);
 
         Ok(CLICaller {
             client,

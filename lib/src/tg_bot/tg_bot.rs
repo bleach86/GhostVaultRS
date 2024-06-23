@@ -69,11 +69,20 @@ async fn command_handler(
     let cli_address = conf.to_owned().cli_address;
     drop(conf);
 
-    let cli_caller = CLICaller::new(&cli_address, true).await.unwrap();
-
     if msg.chat.id.to_string() != auth_user {
         return Ok(());
     }
+
+    let cli_caller_res = CLICaller::new(&cli_address, true).await;
+
+    let cli_caller = match cli_caller_res {
+        Ok(cli) => cli,
+        Err(e) => {
+            let message = escape(format!("Error: {}", e).as_str());
+            bot.send_message(auth_user, message).await?;
+            return Ok(());
+        }
+    };
 
     let message_option = msg.text();
 
@@ -757,7 +766,17 @@ async fn callback_handler(
                 let user = conf.to_owned().tg_user.unwrap();
                 drop(conf);
 
-                let cli_caller = CLICaller::new(&cli_address, true).await.unwrap();
+                let cli_caller_res = CLICaller::new(&cli_address, true).await;
+
+                let cli_caller = match cli_caller_res {
+                    Ok(cli) => cli,
+                    Err(e) => {
+                        let message = escape(format!("Error: {}", e).as_str());
+                        bot.send_message(user, message).await?;
+                        return Ok(());
+                    }
+                };
+
                 let cli_res = cli_caller.call_force_resync().await;
 
                 match cli_res {
@@ -997,7 +1016,18 @@ async fn callback_handler(
                     let cli_address = conf.to_owned().cli_address;
                     drop(conf);
 
-                    let cli_caller = CLICaller::new(&cli_address, true).await.unwrap();
+                    let cli_caller_res = CLICaller::new(&cli_address, true).await;
+
+                    let cli_caller = match cli_caller_res {
+                        Ok(cli) => cli,
+                        Err(e) => {
+                            let message = escape(format!("Error: {}", e).as_str());
+                            bot.send_message(q.message.as_ref().unwrap().chat.id, message)
+                                .await?;
+                            return Ok(());
+                        }
+                    };
+
                     let cli_res = cli_caller.call_set_timezone("UTC".to_string()).await;
 
                     match cli_res {
@@ -1050,7 +1080,18 @@ async fn callback_handler(
                 let cli_address = conf.to_owned().cli_address;
                 drop(conf);
 
-                let cli_caller = CLICaller::new(&cli_address, true).await.unwrap();
+                let cli_caller_res = CLICaller::new(&cli_address, true).await;
+
+                let cli_caller = match cli_caller_res {
+                    Ok(cli) => cli,
+                    Err(e) => {
+                        let message = escape(format!("Error: {}", e).as_str());
+                        bot.send_message(q.message.as_ref().unwrap().chat.id, message)
+                            .await?;
+                        return Ok(());
+                    }
+                };
+
                 let cli_res = cli_caller.call_set_timezone(tz.clone()).await;
 
                 match cli_res {
@@ -1368,7 +1409,17 @@ async fn reply_status(
     let cli_address = conf.to_owned().cli_address;
     drop(conf);
 
-    let cli_caller: CLICaller = CLICaller::new(&cli_address, true).await.unwrap();
+    let cli_caller_res = CLICaller::new(&cli_address, true).await;
+
+    let cli_caller = match cli_caller_res {
+        Ok(cli) => cli,
+        Err(e) => {
+            let message = escape(format!("Error: {}", e).as_str());
+            bot.send_message(msg.chat.id, message).await?;
+            return Ok(msg.clone());
+        }
+    };
+
     let cli_res = cli_caller.call_get_daemon_state().await;
     let cli_value = match cli_res {
         Ok(resp) => resp,
@@ -1400,7 +1451,16 @@ async fn send_barchart(
     let chat_id: ChatId = q.message.as_ref().unwrap().chat.id;
     let conf = gv_config.read().await;
 
-    let cli_caller = CLICaller::new(&conf.cli_address, true).await.unwrap();
+    let cli_caller_res = CLICaller::new(&conf.cli_address, true).await;
+
+    let cli_caller = match cli_caller_res {
+        Ok(cli) => cli,
+        Err(e) => {
+            let message = escape(format!("Error: {}", e).as_str());
+            bot.send_message(chat_id, message).await?;
+            return Ok(());
+        }
+    };
 
     let cli_res = cli_caller
         .call_get_stake_barchart_data(start_end.0, start_end.1, division.to_string())
@@ -1469,7 +1529,16 @@ async fn send_earnings_chart(
     let chat_id: ChatId = q.message.as_ref().unwrap().chat.id;
     let conf = gv_config.read().await;
 
-    let cli_caller = CLICaller::new(&conf.cli_address, true).await.unwrap();
+    let cli_caller_res = CLICaller::new(&conf.cli_address, true).await;
+
+    let cli_caller = match cli_caller_res {
+        Ok(cli) => cli,
+        Err(e) => {
+            let message = escape(format!("Error: {}", e).as_str());
+            bot.send_message(chat_id, message).await?;
+            return Ok(());
+        }
+    };
 
     let chart_data_res = cli_caller
         .call_get_earnings_chart_data(start_end.0, start_end.1)
