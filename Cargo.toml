@@ -48,7 +48,6 @@ whoami = "1.4.1"
 sled = "0.34.7"
 systemstat = "0.2.3"
 humantime = "2.1.0"
-term_size = "0.3.2"
 openssl-sys = { version = "0.9.101", features = ["vendored"] }
 daemonize = "0.5.0"
 chrono = "0.4.37"
