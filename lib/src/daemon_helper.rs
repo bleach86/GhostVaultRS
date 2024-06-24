@@ -102,7 +102,7 @@ impl DaemonHelper {
             "cold" => conf.rpc_wallet.clone(),
             "hot" => conf.rpc_wallet_hot.clone(),
             "no-wallet" => "".to_string(),
-            _ => panic!("Invalid wallet"),
+            _ => "".to_string(),
         };
 
         let rpcurl: RPCURL = RPCURL::default().target(
@@ -1929,7 +1929,7 @@ impl DaemonHelper {
 
     async fn parse_error_msg(&self, err_msg: String) {
         if err_msg.contains("404 Not Found") {
-            panic!("Method Not found.");
+            error!("Method Not found.");
         } else if err_msg.contains("Connection refused") {
             let _ = self.start_daemon().await;
         }
