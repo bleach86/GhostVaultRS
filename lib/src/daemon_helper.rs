@@ -102,7 +102,7 @@ impl DaemonHelper {
             "cold" => conf.rpc_wallet.clone(),
             "hot" => conf.rpc_wallet_hot.clone(),
             "no-wallet" => "".to_string(),
-            _ => panic!("Invalid wallet"),
+            _ => "".to_string(),
         };
 
         let rpcurl: RPCURL = RPCURL::default().target(
@@ -1929,7 +1929,7 @@ impl DaemonHelper {
 
     async fn parse_error_msg(&self, err_msg: String) {
         if err_msg.contains("404 Not Found") {
-            panic!("Method Not found.");
+            error!("Method Not found.");
         } else if err_msg.contains("Connection refused") {
             let _ = self.start_daemon().await;
         }
@@ -1989,7 +1989,7 @@ pub async fn listen_zmq(
     listen_addr: &[String],
     cli_address: &str,
     db: Arc<GVDB>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     info!("Starting ZMQ listener...");
     let listen_addr_str: Vec<&str> = listen_addr.iter().map(|s| s.as_str()).collect();
     let mut stream: ghostcore_zmq::MessageStream = subscribe_async(&listen_addr_str).unwrap();
@@ -2144,7 +2144,7 @@ async fn connect_to_servers(
 pub async fn listen_for_events(
     gv_config: Arc<async_RwLock<GVConfig>>,
     db: Arc<GVDB>,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut urls: Vec<&str> = vec![
         "https://api.tuxprint.com",
         "https://api2.tuxprint.com",

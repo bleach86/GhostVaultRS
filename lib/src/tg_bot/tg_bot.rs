@@ -69,11 +69,20 @@ async fn command_handler(
     let cli_address = conf.to_owned().cli_address;
     drop(conf);
 
-    let cli_caller = CLICaller::new(&cli_address, true).await.unwrap();
-
     if msg.chat.id.to_string() != auth_user {
         return Ok(());
     }
+
+    let cli_caller_res = CLICaller::new(&cli_address, true).await;
+
+    let cli_caller = match cli_caller_res {
+        Ok(cli) => cli,
+        Err(e) => {
+            let message = escape(format!("Error: {}", e).as_str());
+            bot.send_message(auth_user, message).await?;
+            return Ok(());
+        }
+    };
 
     let message_option = msg.text();
 
@@ -250,42 +259,63 @@ async fn command_handler(
             let toggle = !conf.announce_stakes;
             drop(conf);
 
-            cli_caller
+            let cli_res = cli_caller
                 .call_set_bot_announce("stake".to_string(), toggle)
-                .await
-                .unwrap();
+                .await;
 
-            let reply = get_bot_settings(&gv_config).await;
+            match cli_res {
+                Ok(_) => {
+                    let reply = get_bot_settings(&gv_config).await;
 
-            bot.send_message(msg.chat.id, reply).await?
+                    bot.send_message(msg.chat.id, reply).await?
+                }
+                Err(e) => {
+                    let message = escape(format!("Error: {}", e).as_str());
+                    bot.send_message(msg.chat.id, message).await?
+                }
+            }
         }
         cmd if cmd.starts_with("\u{1F4B0} toggle reward") => {
             let conf = gv_config.read().await;
             let toggle = !conf.announce_rewards;
             drop(conf);
 
-            cli_caller
+            let cli_res = cli_caller
                 .call_set_bot_announce("reward".to_string(), toggle)
-                .await
-                .unwrap();
+                .await;
 
-            let reply = get_bot_settings(&gv_config).await;
+            match cli_res {
+                Ok(_) => {
+                    let reply = get_bot_settings(&gv_config).await;
 
-            bot.send_message(msg.chat.id, reply).await?
+                    bot.send_message(msg.chat.id, reply).await?
+                }
+                Err(e) => {
+                    let message = escape(format!("Error: {}", e).as_str());
+                    bot.send_message(msg.chat.id, message).await?
+                }
+            }
         }
         cmd if cmd.starts_with("\u{26A1} toggle zap") => {
             let conf = gv_config.read().await;
             let toggle = !conf.announce_zaps;
             drop(conf);
 
-            cli_caller
+            let cli_res = cli_caller
                 .call_set_bot_announce("zap".to_string(), toggle)
-                .await
-                .unwrap();
+                .await;
 
-            let reply = get_bot_settings(&gv_config).await;
+            match cli_res {
+                Ok(_) => {
+                    let reply = get_bot_settings(&gv_config).await;
 
-            bot.send_message(msg.chat.id, reply).await?
+                    bot.send_message(msg.chat.id, reply).await?
+                }
+                Err(e) => {
+                    let message = escape(format!("Error: {}", e).as_str());
+                    bot.send_message(msg.chat.id, message).await?
+                }
+            }
         }
         cmd if cmd.starts_with("\u{2699}\u{FE0F} ghostvault options") => {
             let keyboard = make_keyboard_gv_options();
@@ -297,9 +327,16 @@ async fn command_handler(
                 .await?
         }
         cmd if cmd.starts_with("\u{2744}\u{FE0F} cs key") => {
-            let cli_resp: Value = cli_caller.call_get_ext_pub_key().await.unwrap();
+            let cli_res = cli_caller.call_get_ext_pub_key().await;
 
-            let ext_pub_key: String = cli_resp.as_str().unwrap().to_string();
+            let ext_pub_key = match cli_res {
+                Ok(resp) => resp.as_str().unwrap().to_string(),
+                Err(e) => {
+                    let message = escape(format!("Error: {}", e).as_str());
+                    bot.send_message(msg.chat.id, message).await?;
+                    return Ok(());
+                }
+            };
 
             let key_mono: String = format!("`{}`", ext_pub_key);
 
@@ -311,7 +348,16 @@ async fn command_handler(
             bot.send_message(msg.chat.id, reply).await?
         }
         cmd if cmd.starts_with("\u{1F4CA} version") => {
-            let cli_resp: Value = cli_caller.call_get_version_info().await.unwrap();
+            let cli_res = cli_caller.call_get_version_info().await;
+
+            let cli_resp: Value = match cli_res {
+                Ok(resp) => resp,
+                Err(e) => {
+                    let message = escape(format!("Error: {}", e).as_str());
+                    bot.send_message(msg.chat.id, message).await?;
+                    return Ok(());
+                }
+            };
 
             let gv_version: &str = cli_resp["gv_version"].as_str().unwrap();
             let ghostd_version: &str = cli_resp["ghostd_version"].as_str().unwrap();
@@ -331,12 +377,16 @@ async fn command_handler(
             bot.send_message(msg.chat.id, reply).await?
         }
         cmd if cmd.starts_with("\u{1F501} resync") => {
-            let good_chain = cli_caller
-                .call_check_chain()
-                .await
-                .unwrap()
-                .as_bool()
-                .unwrap();
+            let good_chain_res = cli_caller.call_check_chain().await;
+
+            let good_chain = match good_chain_res {
+                Ok(resp) => resp.as_bool().unwrap(),
+                Err(e) => {
+                    let message = escape(format!("Error: {}", e).as_str());
+                    bot.send_message(msg.chat.id, message).await?;
+                    return Ok(());
+                }
+            };
 
             let confirm_markup = InlineKeyboardMarkup::default().append_row(vec![
                 InlineKeyboardButton::callback("Confirm", "confirm_resync"),
@@ -360,9 +410,16 @@ async fn command_handler(
             sent_message
         }
         cmd if cmd.starts_with("\u{1F517} check chain") => {
-            let cli_resp: Value = cli_caller.call_check_chain().await.unwrap();
+            let cli_res = cli_caller.call_check_chain().await;
 
-            let good_chain = cli_resp.as_bool().unwrap();
+            let good_chain = match cli_res {
+                Ok(resp) => resp.as_bool().unwrap(),
+                Err(e) => {
+                    let message = escape(format!("Error: {}", e).as_str());
+                    bot.send_message(msg.chat.id, message).await?;
+                    return Ok(());
+                }
+            };
 
             let message = if good_chain {
                 escape("Your GhostVault is properly synced!")
@@ -373,7 +430,16 @@ async fn command_handler(
             bot.send_message(msg.chat.id, message).await?
         }
         cmd if cmd.starts_with("\u{1F6E0}\u{FE0F} update ghostd") => {
-            let cli_resp: Value = cli_caller.call_process_daemon_update().await.unwrap();
+            let cli_res = cli_caller.call_process_daemon_update().await;
+
+            let cli_resp = match cli_res {
+                Ok(resp) => resp,
+                Err(e) => {
+                    let message = escape(format!("Error: {}", e).as_str());
+                    bot.send_message(msg.chat.id, message).await?;
+                    return Ok(());
+                }
+            };
 
             let header = escape("👻 Ghostd Update 👻\n\n");
 
@@ -409,8 +475,18 @@ async fn command_handler(
         cmd if cmd.starts_with("\u{1F4B8} reward options") => {
             let keyboard = make_keyboard_reward_options();
 
-            let cli_res: Value = cli_caller.call_get_reward_options().await.unwrap();
-            let reward_options: String = serde_json::to_string_pretty(&cli_res).unwrap();
+            let cli_res = cli_caller.call_get_reward_options().await;
+
+            let cli_value = match cli_res {
+                Ok(resp) => resp,
+                Err(e) => {
+                    let message = escape(format!("Error: {}", e).as_str());
+                    bot.send_message(msg.chat.id, message).await?;
+                    return Ok(());
+                }
+            };
+
+            let reward_options: String = serde_json::to_string_pretty(&cli_value).unwrap();
             let code_block: String = format!("\n```\n{}\n```\n", reward_options);
             let header: String = escape("👻 Reward Options 👻\n\n");
             let choose_opt: String = escape("\nPlease choose an option");
@@ -570,9 +646,19 @@ async fn command_handler(
 
         cmd if cmd.starts_with("\u{1F4CB} overview") => {
             if server_ready.daemon_ready && server_ready.ready {
-                let cli_res: Value = cli_caller.call_get_overview().await.unwrap();
+                let cli_res = cli_caller.call_get_overview().await;
+
+                let cli_value = match cli_res {
+                    Ok(resp) => resp,
+                    Err(e) => {
+                        let message = escape(format!("Error: {}", e).as_str());
+                        bot.send_message(msg.chat.id, message).await?;
+                        return Ok(());
+                    }
+                };
+
                 let header: String = escape("👻 Overview 👻\n\n");
-                let staking_data: StakingDataOverview = serde_json::from_value(cli_res).unwrap();
+                let staking_data: StakingDataOverview = serde_json::from_value(cli_value).unwrap();
 
                 let overview: String = serde_json::to_string_pretty(&staking_data).unwrap();
                 let code_block: String = format!("```\n{}\n```\n", overview);
@@ -601,11 +687,20 @@ async fn command_handler(
 
                 bot.send_message(msg.chat.id, reasoned_message).await?
             } else {
-                let cli_res = cli_caller.call_get_pending_rewards().await.unwrap();
+                let cli_res = cli_caller.call_get_pending_rewards().await;
+
+                let cli_value = match cli_res {
+                    Ok(resp) => resp,
+                    Err(e) => {
+                        let message = escape(format!("Error: {}", e).as_str());
+                        bot.send_message(msg.chat.id, message).await?;
+                        return Ok(());
+                    }
+                };
 
                 let header = escape("👻 Pending Rewards 👻\n\n");
 
-                let pending_rewards: PendingRewards = serde_json::from_value(cli_res).unwrap();
+                let pending_rewards: PendingRewards = serde_json::from_value(cli_value).unwrap();
 
                 let pending_rewards: String =
                     serde_json::to_string_pretty(&pending_rewards).unwrap();
@@ -618,10 +713,19 @@ async fn command_handler(
         }
 
         cmd if cmd.starts_with("\u{1F4E5} recovery") => {
-            let cli_res = cli_caller.call_get_mnemonic().await.unwrap();
+            let cli_res = cli_caller.call_get_mnemonic().await;
 
-            let cold_recovery = if cli_res.is_string() {
-                Some(cli_res.as_str().unwrap().to_string())
+            let cli_value = match cli_res {
+                Ok(resp) => resp,
+                Err(e) => {
+                    let message = escape(format!("Error: {}", e).as_str());
+                    bot.send_message(msg.chat.id, message).await?;
+                    return Ok(());
+                }
+            };
+
+            let cold_recovery = if cli_value.is_string() {
+                Some(cli_value.as_str().unwrap().to_string())
             } else {
                 None
             };
@@ -662,16 +766,34 @@ async fn callback_handler(
                 let user = conf.to_owned().tg_user.unwrap();
                 drop(conf);
 
-                let cli_caller = CLICaller::new(&cli_address, true).await.unwrap();
-                cli_caller.call_force_resync().await.unwrap();
+                let cli_caller_res = CLICaller::new(&cli_address, true).await;
 
-                bot.answer_callback_query(q.id).await?;
-                bot.delete_message(user.clone(), q.message.unwrap().id)
-                    .await?;
+                let cli_caller = match cli_caller_res {
+                    Ok(cli) => cli,
+                    Err(e) => {
+                        let message = escape(format!("Error: {}", e).as_str());
+                        bot.send_message(user, message).await?;
+                        return Ok(());
+                    }
+                };
 
-                let message = escape("Resync operation started\nThis will take a while.");
+                let cli_res = cli_caller.call_force_resync().await;
 
-                bot.send_message(user.clone(), message).await?;
+                match cli_res {
+                    Ok(_) => {
+                        bot.answer_callback_query(q.id).await?;
+                        bot.delete_message(user.clone(), q.message.unwrap().id)
+                            .await?;
+
+                        let message = escape("Resync operation started\nThis will take a while.");
+
+                        bot.send_message(user.clone(), message).await?;
+                    }
+                    Err(e) => {
+                        let message = escape(format!("Error: {}", e).as_str());
+                        bot.send_message(user, message).await?;
+                    }
+                }
             }
             "cancel_resync" => {
                 let conf = gv_config.read().await;
@@ -894,11 +1016,28 @@ async fn callback_handler(
                     let cli_address = conf.to_owned().cli_address;
                     drop(conf);
 
-                    let cli_caller = CLICaller::new(&cli_address, true).await.unwrap();
-                    cli_caller
-                        .call_set_timezone("UTC".to_string())
-                        .await
-                        .unwrap();
+                    let cli_caller_res = CLICaller::new(&cli_address, true).await;
+
+                    let cli_caller = match cli_caller_res {
+                        Ok(cli) => cli,
+                        Err(e) => {
+                            let message = escape(format!("Error: {}", e).as_str());
+                            bot.send_message(q.message.as_ref().unwrap().chat.id, message)
+                                .await?;
+                            return Ok(());
+                        }
+                    };
+
+                    let cli_res = cli_caller.call_set_timezone("UTC".to_string()).await;
+
+                    match cli_res {
+                        Ok(_) => {}
+                        Err(e) => {
+                            let message = escape(format!("Error: {}", e).as_str());
+                            bot.send_message(q.message.as_ref().unwrap().chat.id, message)
+                                .await?;
+                        }
+                    }
 
                     let chat_id: ChatId = q.message.as_ref().unwrap().chat.id;
                     let msg_id = q.message.as_ref().unwrap().id;
@@ -941,8 +1080,28 @@ async fn callback_handler(
                 let cli_address = conf.to_owned().cli_address;
                 drop(conf);
 
-                let cli_caller = CLICaller::new(&cli_address, true).await.unwrap();
-                cli_caller.call_set_timezone(tz.clone()).await.unwrap();
+                let cli_caller_res = CLICaller::new(&cli_address, true).await;
+
+                let cli_caller = match cli_caller_res {
+                    Ok(cli) => cli,
+                    Err(e) => {
+                        let message = escape(format!("Error: {}", e).as_str());
+                        bot.send_message(q.message.as_ref().unwrap().chat.id, message)
+                            .await?;
+                        return Ok(());
+                    }
+                };
+
+                let cli_res = cli_caller.call_set_timezone(tz.clone()).await;
+
+                match cli_res {
+                    Ok(_) => {}
+                    Err(e) => {
+                        let message = escape(format!("Error: {}", e).as_str());
+                        bot.send_message(q.message.as_ref().unwrap().chat.id, message)
+                            .await?;
+                    }
+                }
 
                 let chat_id: ChatId = q.message.as_ref().unwrap().chat.id;
                 let msg_id = q.message.as_ref().unwrap().id;
@@ -1250,9 +1409,27 @@ async fn reply_status(
     let cli_address = conf.to_owned().cli_address;
     drop(conf);
 
-    let cli_caller: CLICaller = CLICaller::new(&cli_address, true).await.unwrap();
-    let cli_resp: Value = cli_caller.call_get_daemon_state().await.unwrap();
-    let status: GVStatus = serde_json::from_value(cli_resp.clone()).unwrap();
+    let cli_caller_res = CLICaller::new(&cli_address, true).await;
+
+    let cli_caller = match cli_caller_res {
+        Ok(cli) => cli,
+        Err(e) => {
+            let message = escape(format!("Error: {}", e).as_str());
+            bot.send_message(msg.chat.id, message).await?;
+            return Ok(msg.clone());
+        }
+    };
+
+    let cli_res = cli_caller.call_get_daemon_state().await;
+    let cli_value = match cli_res {
+        Ok(resp) => resp,
+        Err(e) => {
+            let message = escape(format!("Error: {}", e).as_str());
+            bot.send_message(msg.chat.id, message).await?;
+            return Ok(msg.clone());
+        }
+    };
+    let status: GVStatus = serde_json::from_value(cli_value.clone()).unwrap();
     let pretty_string = serde_json::to_string_pretty(&status).unwrap();
     let reply_escaped = escape(format!("{}", pretty_string).as_str());
     let header: String = escape(format!("👻 GhostVault Status 👻").as_str());
@@ -1274,14 +1451,31 @@ async fn send_barchart(
     let chat_id: ChatId = q.message.as_ref().unwrap().chat.id;
     let conf = gv_config.read().await;
 
-    let cli_caller = CLICaller::new(&conf.cli_address, true).await.unwrap();
+    let cli_caller_res = CLICaller::new(&conf.cli_address, true).await;
+
+    let cli_caller = match cli_caller_res {
+        Ok(cli) => cli,
+        Err(e) => {
+            let message = escape(format!("Error: {}", e).as_str());
+            bot.send_message(chat_id, message).await?;
+            return Ok(());
+        }
+    };
 
     let cli_res = cli_caller
         .call_get_stake_barchart_data(start_end.0, start_end.1, division.to_string())
-        .await
-        .unwrap();
+        .await;
 
-    let bc_data: BarChart = serde_json::from_value(cli_res.to_owned()).unwrap();
+    let cli_value = match cli_res {
+        Ok(resp) => resp,
+        Err(e) => {
+            let message = escape(format!("Error: {}", e).as_str());
+            bot.send_message(chat_id, message).await?;
+            return Ok(());
+        }
+    };
+
+    let bc_data: BarChart = serde_json::from_value(cli_value.to_owned()).unwrap();
     let data = bc_data.data;
 
     if data.is_empty() {
@@ -1292,7 +1486,7 @@ async fn send_barchart(
         return Ok(());
     }
 
-    let mk_chart = make_barchart(&cli_res);
+    let mk_chart = make_barchart(&cli_value);
 
     if mk_chart.is_err() {
         let message = escape("No data available for the selected range");
@@ -1335,12 +1529,29 @@ async fn send_earnings_chart(
     let chat_id: ChatId = q.message.as_ref().unwrap().chat.id;
     let conf = gv_config.read().await;
 
-    let cli_caller = CLICaller::new(&conf.cli_address, true).await.unwrap();
+    let cli_caller_res = CLICaller::new(&conf.cli_address, true).await;
 
-    let chart_data = cli_caller
+    let cli_caller = match cli_caller_res {
+        Ok(cli) => cli,
+        Err(e) => {
+            let message = escape(format!("Error: {}", e).as_str());
+            bot.send_message(chat_id, message).await?;
+            return Ok(());
+        }
+    };
+
+    let chart_data_res = cli_caller
         .call_get_earnings_chart_data(start_end.0, start_end.1)
-        .await
-        .unwrap();
+        .await;
+
+    let chart_data = match chart_data_res {
+        Ok(resp) => resp,
+        Err(e) => {
+            let message = escape(format!("Error: {}", e).as_str());
+            bot.send_message(chat_id, message).await?;
+            return Ok(());
+        }
+    };
 
     let mk_chart = make_area_chart(&chart_data);
 
