@@ -154,7 +154,7 @@ impl CLICaller {
                     return Ok(result);
                 }
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => return Err(e.into()),
         }
 
         let result: Result<Value, client::RpcError> = async move {
@@ -172,7 +172,7 @@ impl CLICaller {
                 self.display_result(&result.as_u64().unwrap().to_string());
                 Ok(result)
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -253,7 +253,7 @@ impl CLICaller {
                     return Ok(result);
                 }
             }
-            Err(e) => panic!("Failed to execute command: {:?}", e),
+            Err(e) => return Err(e.into()),
         }
         let result: Result<Value, client::RpcError> = async move {
             // Send the request twice, just to be safe! ;)
