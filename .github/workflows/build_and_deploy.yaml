@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Set up environment variables
+        run: |
+          echo "GITHUB_EVENT_NAME=${{ github.event_name }}" >> $GITHUB_ENV
+          echo "GITHUB_EVENT_PATH=${{ github.event_path }}" >> $GITHUB_ENV
+          echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+          echo "GITHUB_REPOSITORY=${{ github.repository }}" >> $GITHUB_ENV
+
+      - name: executing remote ssh commands using password
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USERNAME }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          command_timeout: 4h
+          script: |
+            export GITHUB_EVENT_NAME=${{ github.event_name }}
+            export GITHUB_EVENT_PATH=${{ github.event_path }}
+            export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            export GITHUB_REPOSITORY=${{ github.repository }}
+            echo "GITHUB_EVENT_NAME=${{ github.event_name }}"
+            echo "GITHUB_EVENT_PATH=${{ github.event_path }}"
+            echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}"
+            echo "GITHUB_REPOSITORY=${{ github.repository }}"
+            . "$HOME/.cargo/env"
+            if [ "${{ github.event_name }}" = "release" ]; then
+              echo "Running release script"
+              bash ./run_release.sh
+            else
+              echo "Running build script"
+              bash ./run_build.sh
+            fi
