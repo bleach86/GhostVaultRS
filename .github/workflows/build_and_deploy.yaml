@@ -41,7 +41,6 @@ jobs:
             echo "GITHUB_EVENT_PATH=${{ github.event_path }}"
             echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}"
             echo "GITHUB_REPOSITORY=${{ github.repository }}"
-            . "$HOME/.cargo/env"
             if [ "${{ github.event_name }}" = "release" ]; then
               echo "Running release script"
               bash ./run_release.sh
