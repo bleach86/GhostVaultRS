@@ -40,13 +40,6 @@ jobs:
             export GITHUB_REPOSITORY=${{ github.repository }}
             export BRANCH_NAME=${{ github.head_ref || github.ref_name }}
             
-            # Debugging information
-            echo "GITHUB_EVENT_NAME=${GITHUB_EVENT_NAME}"
-            echo "GITHUB_EVENT_PATH=${GITHUB_EVENT_PATH}"
-            echo "GITHUB_TOKEN=${GITHUB_TOKEN}"
-            echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY}"
-            echo "BRANCH_NAME=${BRANCH_NAME}"
-            
             if [ "${GITHUB_EVENT_NAME}" = "release" ]; then
               echo "Running release script"
               bash ./run_release.sh
