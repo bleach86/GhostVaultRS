@@ -7,6 +7,10 @@ on:
     types: [published]
   workflow_dispatch:
 
+concurrency:
+  group: GhostVault_Builder
+  cancel-in-progress: false
+
 env:
   REGISTRY_IMAGE: tuxprint/ghostvault
 
