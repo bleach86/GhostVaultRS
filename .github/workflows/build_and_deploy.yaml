@@ -9,6 +9,10 @@ on:
     types: [published]
   workflow_dispatch:
 
+concurrency:
+  group: GhostVault_Builder
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
