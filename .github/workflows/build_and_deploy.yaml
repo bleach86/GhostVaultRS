@@ -39,7 +39,7 @@ jobs:
             export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
             export GITHUB_REPOSITORY=${{ github.repository }}
             export BRANCH_NAME=${{ github.head_ref || github.ref_name }}
-            
+
             if [ "${GITHUB_EVENT_NAME}" = "release" ]; then
               echo "Running release script"
               bash ./run_release.sh
