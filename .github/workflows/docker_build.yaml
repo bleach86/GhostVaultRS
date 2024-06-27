@@ -35,7 +35,7 @@ jobs:
           images: ${{ env.REGISTRY_IMAGE }}
           tags: |
             type=ref,event=branch
-            type=ref,event=tag,prefix=latest
+            type=raw,enable=true,value=latest
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
