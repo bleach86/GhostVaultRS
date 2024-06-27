@@ -2,6 +2,12 @@ name: ci
 
 on:
   push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
 
 env:
   REGISTRY_IMAGE: tuxprint/ghostvault
