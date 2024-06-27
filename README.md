@@ -2,4 +2,4 @@
 
 Rust implementation of GhostVault with integrated Telegram bot interface.
 
-Anon staking reenvision.
+Anon staking reenvisioned.
