@@ -1044,6 +1044,8 @@ impl GvCLIServer {
         file_ops::rm_file(&peers_file).unwrap();
         file_ops::rm_file(&banlist_file).unwrap();
 
+        self.db.clear_db().await.unwrap();
+
         self.daemon.wait_for_daemon_startup().await;
         self.set_daemon_online(true).await;
 
@@ -2416,7 +2418,13 @@ impl GvCLI for GvCLIServer {
     async fn import_wallet(self, _: context::Context, mnemonic: String, name: String) -> Value {
         let mnemonic = mnemonic.trim();
 
-        let mnemonic_valid = self.daemon.validate_mnemonic(mnemonic).await.unwrap();
+        let mnemonic_valid_res = self.daemon.validate_mnemonic(mnemonic).await;
+
+        let mnemonic_valid = if mnemonic_valid_res.is_err() {
+            return Value::String("Error validating mnemonic!".to_string());
+        } else {
+            mnemonic_valid_res.unwrap()
+        };
 
         if !mnemonic_valid {
             return Value::String("Invalid mnemonic!".to_string());
