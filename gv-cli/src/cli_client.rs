@@ -1,9 +1,3 @@
-// Copyright 2018 Google LLC
-//
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file or at
-// https://opensource.org/licenses/MIT.
-
 use serde::ser::StdError;
 use service::{
     config,
@@ -417,6 +411,7 @@ fn display_version() {
 }
 
 fn display_help() {
+    display_version();
     println!("Usage: gv-cli [OPTIONS] [METHOD] [ARGS]");
     println!("\nOptions:");
     println!("  --gv-data-dir=GV_DATA_DIR    Set the GhostVault data directory");
