@@ -1044,6 +1044,8 @@ impl GvCLIServer {
         file_ops::rm_file(&peers_file).unwrap();
         file_ops::rm_file(&banlist_file).unwrap();
 
+        self.db.clear_db().await.unwrap();
+
         self.daemon.wait_for_daemon_startup().await;
         self.set_daemon_online(true).await;
 
